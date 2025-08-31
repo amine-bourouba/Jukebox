@@ -72,33 +72,33 @@ export default function SongList() {
           <div className="mt-8 flow-root">
             <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                <table className="relative min-w-full divide-y divide-gray-300 dark:divide-white/15">
+                <table className="relative min-w-full divide-y divide-gray-300">
                   <thead>
                     <tr>
                       <th
                         scope="col"
-                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold sm:pl-0 text-white"
+                        className="py-4 text-left text-sm font-semibold sm:pl-0 text-white"
                       >
                         #
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-white">
+                      <th scope="col" className="pl-1 py-4 text-left text-sm font-semibold text-white">
                         Title
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-white">
+                      <th scope="col" className="pl-3 py-4 text-left text-sm font-semibold text-white">
                         Album
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-white">
+                      <th scope="col" className="pl-3 py-4 text-left text-sm font-semibold text-white">
                         Date Added
                       </th>
-                      <th scope="col" className="py-3.5 pl-3 pr-4 sm:pr-0">
+                      <th scope="col" className="py-4 pl-3 pr-4 sm:pr-0">
                         <MdAccessTime size={20} className="text-white" />
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900">
+                  <tbody className="divide-y divide-gray-200 dark:divide-white/10 bg-transparent">
                     {selectedPlaylist?.playlistSongs.map((el) => (
                       <tr key={el.id} onClick={() => handlePlaySong(el.song)} className="h-16">
-                        <td className="whitespace-nowrap px-3 text-sm text-gray-500 dark:text-gray-400">
+                        <td className="whitespace-nowrap pr-3 text-sm text-gray-500 dark:text-gray-400">
                           <span className="text-white">{el.position}</span>
                         </td>
                         <td className="whitespace-nowrap pl-4 pr-3 text-sm sm:pl-0">
