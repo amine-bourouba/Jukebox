@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import { RootState } from '../store/store';
 import { setTrack, setRepeat, setShuffle } from '../store/playerSlice';
@@ -95,6 +95,12 @@ export default function Player() {
       audioRef.current.volume = Number(e.target.value);
     }
   };
+
+  useEffect(() => {
+    if (blobUrl && audioRef.current) {
+      play();
+    }
+  }, [blobUrl]);
 
   return (
     <footer className="fixed bottom-0 w-4/5 bg-shadow bg-opacity-95 flex items-center justify-between px-6 py-4">

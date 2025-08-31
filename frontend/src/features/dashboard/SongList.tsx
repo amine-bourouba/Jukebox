@@ -17,7 +17,6 @@ export default function SongList() {
 
   // Architectural decision: Play song on click by dispatching setTrack
   const handlePlaySong = (songObj: any) => {
-    // songObj can be el.song (from playlist) or song (from filtered list)
     dispatch(setTrack(songObj));
   };
 
