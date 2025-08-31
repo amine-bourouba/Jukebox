@@ -1,0 +1,116 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  songId    String
+  authorId  String
+  content   String
+  rating    Int?
+  isFlagged Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+  song      Song     @relation(fields: [songId], references: [id])
+}
+
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  password          String
+  displayName       String
+  avatarUrl         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  isVerified        Boolean            @default(false)
+  preferences       Json?
+  songs             Song[]
+  playlists         Playlist[]
+  comments          Comment[]
+  followed          UserFollow[]       @relation("Followed")
+  following         UserFollow[]       @relation("Following")
+  songLikes         SongLike[]
+  playlistFollowers PlaylistFollower[]
+  refreshToken      String?
+}
+
+model Song {
+  id            String         @id @default(uuid())
+  ownerId       String
+  title         String
+  artist        String
+  album         String?
+  coverImageUrl String?
+  duration      Int?
+  explicit      Boolean        @default(false)
+  filePath      String
+  storageKey    String?
+  isPublic      Boolean        @default(true)
+  playCount     Int            @default(0)
+  uploadedAt    DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  owner         User           @relation(fields: [ownerId], references: [id])
+  comments      Comment[]
+  songLikes     SongLike[]
+  playlistSongs PlaylistSong[]
+}
+
+model Playlist {
+  id                      String             @id @default(uuid())
+  ownerId                 String
+  title                   String
+  description             String?
+  coverImageUrl           String?
+  isPublic                Boolean            @default(true)
+  positionOrderingVersion Int                @default(1)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  owner                   User               @relation(fields: [ownerId], references: [id])
+  playlistSongs           PlaylistSong[]
+  playlistFollowers       PlaylistFollower[]
+}
+
+model PlaylistSong {
+  id         String   @id @default(uuid())
+  playlistId String
+  songId     String
+  position   Int
+  addedAt    DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  song       Song     @relation(fields: [songId], references: [id])
+}
+
+model SongLike {
+  id      String   @id @default(uuid())
+  userId  String
+  songId  String
+  likedAt DateTime @default(now())
+  user    User     @relation(fields: [userId], references: [id])
+  song    Song     @relation(fields: [songId], references: [id])
+
+  @@unique([userId, songId])
+}
+
+model PlaylistFollower {
+  id         String   @id @default(uuid())
+  userId     String
+  playlistId String
+  followedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+}
+
+model UserFollow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  followedAt  DateTime @default(now())
+  follower    User     @relation("Followed", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+}

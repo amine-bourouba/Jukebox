@@ -1,0 +1,27 @@
+{
+  "name": "@jukebox/backend",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/passport": "^11.0.5",
+    "bcrypt": "^6.0.0",
+    "music-metadata": "^11.8.2",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "typeorm": "^0.3.25"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/passport-jwt": "^4.0.1",
+    "nodemon": "^3.1.10",
+    "run-script-webpack-plugin": "^0.2.3",
+    "ts-loader": "^9.5.2",
+    "webpack": "^5.101.0",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "scripts": {
+    "start": "nest start --watch",
+    "build": "nest build"
+  }
+}
