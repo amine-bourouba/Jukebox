@@ -32,7 +32,7 @@ export default function Player() {
     duration,
     seek,
     blobUrl,
-  } = useAudioPlayer(streamUrl ?? '', token ?? '');
+  } = useAudioPlayer(currentTrack?.id ? streamUrl : '' , token ?? '');
 
   const [volume, setVolume] = useState(1);
 
@@ -95,10 +95,6 @@ export default function Player() {
       audioRef.current.volume = Number(e.target.value);
     }
   };
-
-  // Architectural decision: Use conditional Tailwind classes for icon color
-  // - text-white when disabled
-  // - text-amethyst when enabled
 
   return (
     <footer className="fixed bottom-0 w-4/5 bg-shadow bg-opacity-95 flex items-center justify-between px-6 py-4">
