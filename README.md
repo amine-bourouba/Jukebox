@@ -1,4 +1,4 @@
-# Jukebox
+# Jukebox (WIP)
 
 ✨ Your new local music server, free of charge✨.
 
