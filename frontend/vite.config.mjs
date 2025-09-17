@@ -1,6 +1,7 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { analyzer } from 'vite-bundle-analyzer'
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -13,7 +14,10 @@ export default defineConfig(() => ({
     port: 8000,
     host: 'localhost',
   },
-  plugins: [react()],
+  plugins: [
+    analyzer(),
+    react()
+  ],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
