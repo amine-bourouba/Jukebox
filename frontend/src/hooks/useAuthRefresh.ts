@@ -1,43 +1,27 @@
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { refreshToken, logout } from '../store/authSlice';
-import { RootState, AppDispatch } from '../store/store';
+import { useEffect } from 'react';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import { refreshToken, fetchUser } from '../store/authSlice';
+import { RootState } from '../store/store';
 
-// export default function useAuthRefresh() {
-//   const dispatch = useDispatch<AppDispatch>();
-//   const { user, refreshToken: rToken } = useSelector((state: RootState) => state.auth);
 
-//   useEffect(() => {
-//     if (!user || !rToken) return;
-
-//     const interval = setInterval(() => {
-//       dispatch(refreshToken({ userId: user.id, refreshToken: rToken }))
-//         .unwrap()
-//         .catch(() => {
-//           dispatch(logout());
-//         });
-//     }, 1000 * 60 * 10); // every 10 minutes
-
-//     return () => clearInterval(interval);
-//   }, [user, rToken, dispatch]);
-// }
 export default function useAuthRefresh() {
   const dispatch = useDispatch();
-  const [refreshing, setRefreshing] = useState(true);
-  const refreshTokenValue = useSelector((state: RootState) => state.auth.refreshToken);
+  const token = useSelector((state: RootState) => state.auth.token, shallowEqual);
+  const refreshTokenValue = useSelector((state: RootState) => state.auth.refreshToken, shallowEqual);
+  const user = useSelector((state: RootState) => state.auth.user, shallowEqual);
 
   useEffect(() => {
-    if (refreshTokenValue) {
-      dispatch(refreshToken(refreshTokenValue))
+    if (!token && refreshTokenValue) {
+      dispatch(refreshToken())
         .unwrap()
-        .catch((e) => {
-          console.error('Token refresh failed:', e);
-        })
-        .finally(() => setRefreshing(false));
-    } else {
-      setRefreshing(false);
+        .then(() => dispatch(fetchUser()))
+        .catch((err: any) => {
+          console.log("🚀 ~ useAuthRefresh ~ err:", err)
+        });
     }
-  }, [dispatch, refreshTokenValue]);
-
-  return refreshing;
+    // If there's a token but no user info, fetch user
+    else if (token && !user) {
+      dispatch(fetchUser());
+    }
+  }, []);
 }
