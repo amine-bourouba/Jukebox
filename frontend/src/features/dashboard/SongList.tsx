@@ -1,21 +1,24 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchFilteredSongs } from '../../store/songSlice';
 import { setTrack } from '../../store/playerSlice';
 import { RootState, AppDispatch } from '../../store/store';
 
+import { HiOutlineDotsHorizontal } from 'react-icons/hi';
 import { MdAccessTime } from "react-icons/md";
+import { TbPlaylist } from "react-icons/tb";
 
 export default function SongList() {
   const dispatch = useDispatch<AppDispatch>();
-  const { filter, songs } = useSelector((state: RootState) => state.songs);
+  const { filter } = useSelector((state: RootState) => state.songs);
   const { selectedPlaylistId, selectedPlaylist } = useSelector((state: RootState) => state.player);
+
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchFilteredSongs(filter));
   }, [dispatch, filter]);
 
-  // Architectural decision: Play song on click by dispatching setTrack
   const handlePlaySong = (songObj: any) => {
     dispatch(setTrack(songObj));
   };
@@ -44,17 +47,8 @@ export default function SongList() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="sm:flex sm:items-center">
             <div className="sm:flex">
-              <div className="mb-4 shrink-0 sm:mr-4 sm:mb-0">
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 200 200"
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                  className="h-40 w-full border border-gray-300 bg-white text-gray-300 sm:w-40 dark:border-white/15 dark:bg-gray-900 dark:text-white/15"
-                >
-                  <path d="M0 0l200 200M0 200L200 0" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-                </svg>
+              <div className="shrink-0 mr-4 -mb-4">
+                <TbPlaylist size={175} className="text-amethyst" />
               </div>
               <div className="flex flex-col justify-between">
                 <div/>
@@ -96,7 +90,12 @@ export default function SongList() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-white/10 bg-transparent">
                     {selectedPlaylist?.playlistSongs.map((el) => (
-                      <tr key={el.id} onClick={() => handlePlaySong(el.song)} className="h-16">
+                      <tr key={el.id}
+                        onClick={() => handlePlaySong(el.song)}
+                        className="h-16 group"
+                        onMouseEnter={() => setHoveredRow(el.id)}
+                        onMouseLeave={() => setHoveredRow(null)}
+                      >
                         <td className="whitespace-nowrap pr-3 text-sm text-gray-500 dark:text-gray-400">
                           <span className="text-white">{el.position}</span>
                         </td>
@@ -121,8 +120,24 @@ export default function SongList() {
                         <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500 dark:text-gray-400">
                           <span className="text-white">{formatDate(el.addedAt)}</span>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500 dark:text-gray-400">
-                          {formatDuration(el.song.duration)}
+                        <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500 dark:text-gray-400 relative">
+                          <span className="flex items-center gap-2">
+                            <span className="text-white">{formatDuration(el.song.duration)}</span>
+                            <button
+                              className={`
+                                p-1 rounded-full transition-opacity duration-200
+                                ${hoveredRow === el.id ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+                              `}
+                              onClick={e => {
+                                e.stopPropagation();
+                                // handle menu open here
+                              }}
+                              tabIndex={hoveredRow === el.id ? 0 : -1}
+                              style={{ minWidth: 32, minHeight: 32 }}
+                            >
+                              <HiOutlineDotsHorizontal className="text-xl text-white" />
+                            </button>
+                          </span>
                         </td>
                       </tr>
                     ))}
