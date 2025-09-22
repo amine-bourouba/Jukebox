@@ -1,20 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+
+import { TbPlaylist } from "react-icons/tb";
+
 import { fetchPlaylists } from '../store/playerSlice';
 import { setSongFilter, fetchFilterOptions } from '../store/songSlice';
 import { fetchSelectedPlaylist, setSelectedPlaylist } from '../store/playerSlice';
-
 import { RootState } from '../store/store';
 
 const pills = [
-  { label: 'Genre', value: 'genre' },
+  { label: 'Playlist', value: 'playlist' },
   { label: 'Artist', value: 'artist' },
-  { label: 'All', value: 'all' },
+  { label: 'Genre', value: 'genre' },
 ];
 
 export default function Sidebar() {
   const dispatch = useDispatch();
   const playlists = useSelector((state: RootState) => state.player.playlists);
+  const selectedPlaylistId = useSelector((state: RootState) => state.player.selectedPlaylistId);
   const filterOptions = useSelector((state: RootState) => state.songs.filterOptions);
   const [selectedPill, setSelectedPill] = useState('all');
   const [selectedOption, setSelectedOption] = useState('');
@@ -88,13 +91,24 @@ export default function Sidebar() {
           {[...(playlists ?? [])]
             .sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
             .map(pl => (
-              <button
-                key={pl.id}
-                className="text-left px-3 py-1 rounded bg-shadow text-silver hover:bg-amethyst hover:text-moon transition"
+              <div 
+                key={pl.id} 
+                className={`flex items-center text-left px-3 py-1 h-16 rounded transition
+                  ${selectedPlaylistId === pl.id
+                    ? 'bg-amethyst shadow-lg'
+                    : 'bg-shadow hover:bg-amethyst/40'}
+                `}
                 onClick={() => handlePlaylistClick(pl.id)}
               >
-                {pl.title}
-              </button>
+                <TbPlaylist size={24} className="text-white mr-2" />
+                <div className="ml-1">
+                  <div className="font-medium text-white">{pl.title}</div>
+                  {/* <div className="mt-1 text-gray-500 dark:text-gray-400">{pl.artist}</div> */}
+                  <div className={`text-sm ${selectedPlaylistId === pl.id ? 'text-gray-200' : 'text-gray-400'}`}>
+                    zehahaha
+                  </div>
+                </div>
+              </div>
             ))}
         </div>
       </div>
