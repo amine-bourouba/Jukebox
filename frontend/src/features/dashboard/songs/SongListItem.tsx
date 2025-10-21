@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
+import { useContextMenu } from '../../../components/ContextMenu/useContextMenu';
 
-
-interface SongListItemProps {
+interface SongListElementProps {
   playlistSong: {
     id: string;
     position: number;
@@ -17,16 +17,16 @@ interface SongListItemProps {
     };
   };
   onPlay: (song: any) => void;
-  onMenuClick?: (songId: string, event: React.MouseEvent) => void;
 }
 
-export default function SongListItem({ 
+export default function SongListElement({ 
   playlistSong, 
-  onPlay, 
-  onMenuClick 
-}: SongListItemProps) {
+  onPlay,
+}: SongListElementProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { showContextMenu, showContextMenuAt } = useContextMenu();
 
+  // Helper functions remain the same...
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
@@ -46,18 +46,41 @@ export default function SongListItem({
     return [m, s].map(v => v.toString().padStart(2, '0')).join(':');
   };
 
-
+  /**
+   * React Concept: Event Handler Organization
+   * 
+   * These handlers demonstrate how to integrate context menu
+   * functionality with existing component interactions.
+   */
   const handleRowClick = () => {
     onPlay(playlistSong.song);
   };
 
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent row click when clicking menu button
-    onMenuClick?.(playlistSong.id, e);
-  };
-
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
+
+  /**
+   * Right-click context menu handler
+   */
+  const handleContextMenu = (event: React.MouseEvent) => {
+    showContextMenu(event, 'playlist-song', playlistSong);
+  };
+
+  /**
+   * Three-dot button click handler
+   */
+  const handleMenuButtonClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    // Get button position for menu placement
+    const rect = event.currentTarget.getBoundingClientRect();
+    showContextMenuAt(
+      rect.left,
+      rect.bottom + 4,
+      'playlist-song',
+      playlistSong
+    );
+  };
 
   return (
     <tr
@@ -65,6 +88,7 @@ export default function SongListItem({
       onClick={handleRowClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onContextMenu={handleContextMenu} // Right-click support
     >
       {/* Position Column */}
       <td className="whitespace-nowrap pr-3 text-sm">
@@ -106,16 +130,15 @@ export default function SongListItem({
           <button
             className={`
               ml-2 p-1 rounded-full transition-all duration-200
-              hover:bg-white/10
+              hover:bg-white/10 focus:bg-white/10 focus:outline-none
               ${isHovered 
                 ? 'opacity-100 pointer-events-auto' 
                 : 'opacity-0 pointer-events-none'
               }
             `}
-            onClick={handleMenuClick}
+            onClick={handleMenuButtonClick}
             aria-label="More options"
             tabIndex={isHovered ? 0 : -1}
-            style={{ minWidth: 32, minHeight: 32 }}
           >
             <HiOutlineDotsHorizontal className="text-xl text-white" />
           </button>
