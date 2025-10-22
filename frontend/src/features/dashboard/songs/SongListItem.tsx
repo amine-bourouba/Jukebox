@@ -46,12 +46,6 @@ export default function SongListElement({
     return [m, s].map(v => v.toString().padStart(2, '0')).join(':');
   };
 
-  /**
-   * React Concept: Event Handler Organization
-   * 
-   * These handlers demonstrate how to integrate context menu
-   * functionality with existing component interactions.
-   */
   const handleRowClick = () => {
     onPlay(playlistSong.song);
   };
@@ -59,20 +53,13 @@ export default function SongListElement({
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
 
-  /**
-   * Right-click context menu handler
-   */
   const handleContextMenu = (event: React.MouseEvent) => {
     showContextMenu(event, 'playlist-song', playlistSong);
   };
 
-  /**
-   * Three-dot button click handler
-   */
   const handleMenuButtonClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     
-    // Get button position for menu placement
     const rect = event.currentTarget.getBoundingClientRect();
     showContextMenuAt(
       rect.left,
@@ -88,7 +75,7 @@ export default function SongListElement({
       onClick={handleRowClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onContextMenu={handleContextMenu} // Right-click support
+      onContextMenu={handleContextMenu}
     >
       {/* Position Column */}
       <td className="whitespace-nowrap pr-3 text-sm">

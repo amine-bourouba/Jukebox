@@ -7,6 +7,7 @@ import { fetchPlaylists } from '../store/playerSlice';
 import { setSongFilter, fetchFilterOptions } from '../store/songSlice';
 import { fetchSelectedPlaylist, setSelectedPlaylist } from '../store/playerSlice';
 import { RootState } from '../store/store';
+import { useContextMenu } from './ContextMenu/useContextMenu';
 
 const pills = [
   { label: 'Playlist', value: 'playlist' },
@@ -21,6 +22,8 @@ export default function Sidebar() {
   const filterOptions = useSelector((state: RootState) => state.songs.filterOptions);
   const [selectedPill, setSelectedPill] = useState('all');
   const [selectedOption, setSelectedOption] = useState('');
+
+  const { showContextMenu } = useContextMenu();
 
   useEffect(() => {
     dispatch(fetchPlaylists());
@@ -46,6 +49,10 @@ export default function Sidebar() {
     dispatch(fetchSelectedPlaylist(playlistId));
   };
 
+  const handleContextMenu = (event: React.MouseEvent) => {
+    showContextMenu(event, 'sidebar-playlist', null);
+  };
+
   return (
     <aside className="w-1/5 bg-midnight flex flex-col py-6 px-4 shadow-lg">
       {/* Pills */}
@@ -62,6 +69,8 @@ export default function Sidebar() {
           </button>
         ))}
       </div>
+      {/* TODO: Implement generic listing component to handle remaing filtering results */}
+
       {/* Filter options (artist/genre) */}
       {selectedPill !== 'all' && (
         <div className="mb-6">
@@ -89,7 +98,6 @@ export default function Sidebar() {
         <div className="text-silver mb-2 text-xs uppercase">Your Playlists</div>
         <div className="flex flex-col gap-1">
           {[...(playlists ?? [])]
-            .sort((a, b) => (a.title ?? '').localeCompare(b.title ?? ''))
             .map(pl => (
               <div 
                 key={pl.id} 
@@ -98,7 +106,9 @@ export default function Sidebar() {
                     ? 'bg-amethyst shadow-lg'
                     : 'bg-shadow hover:bg-amethyst/40'}
                 `}
-                onClick={() => handlePlaylistClick(pl.id)}
+                // onClick={() => handlePlaylistClick(pl.id)}
+                onClick={() => {handlePlaylistClick(pl.id); }}
+                onContextMenu={handleContextMenu}
               >
                 <TbPlaylist size={24} className="text-white mr-2" />
                 <div className="ml-1">

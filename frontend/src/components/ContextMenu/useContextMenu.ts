@@ -41,7 +41,7 @@ export function useContextMenu(): UseContextMenuReturn {
       ...customConfig,
     };
 
-    showMenu(event.clientX, event.clientY, config, data.id);
+    showMenu(event.clientX, event.clientY, config, data?.id);
   }, [showMenu, getMenuItems]);
 
   const showContextMenuAt = useCallback((
