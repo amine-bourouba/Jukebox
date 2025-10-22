@@ -2,10 +2,13 @@ export interface ContextMenuItem {
   id: string;
   label: string;
   icon?: React.ComponentType<{ className?: string }>;
-  onClick: () => void;
+  onClick?: () => void;
   disabled?: boolean;
   color?: string;
+  hoverColor?: string;
   separator?: boolean;
+  
+  submenu?: ContextMenuItem[];
 }
 
 export interface ContextMenuConfig {
@@ -19,6 +22,17 @@ export interface ContextMenuState {
   position: { x: number; y: number };
   config: ContextMenuConfig | null;
   targetId: string | null;
+  submenuStates: Record<string, {
+    isOpen: boolean;
+    position: { x: number; y: number };
+  }>;
+}
+
+export interface SubmenuTriggerProps {
+  item: ContextMenuItem;
+  onSubmenuToggle: (itemId: string, position: { x: number; y: number }) => void;
+  onSubmenuClose: (itemId: string) => void;
+  isSubmenuOpen: boolean;
 }
 
 export type ContextMenuTrigger = 
