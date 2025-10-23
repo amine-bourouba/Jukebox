@@ -1,22 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import api from '../services/api';
-
-type Track = {
-  id: string;
-  title: string;
-  artist: string;
-  streamUrl: string;
-};
-
-export type PlayerState = {
-  currentTrack: Track | null;
-  queue: Track[];
-  repeat: 'off' | 'one' | 'all';
-  shuffle: boolean;
-  playlists?: any[];
-  selectedPlaylistId: string | null;
-  selectedPlaylist: null;
-};
+import { PlayerState, Track } from './types';
 
 const initialState: PlayerState = {
   currentTrack: null,

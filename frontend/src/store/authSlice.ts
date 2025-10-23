@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../services/authService';
+import { AuthState } from './types';
 
 export const login = createAsyncThunk(
   'auth/login',
@@ -54,8 +55,6 @@ export const refreshToken = createAsyncThunk(
     const refreshToken = state.auth.refreshToken || localStorage.getItem('refreshToken');
     if (!userId || !refreshToken) throw new Error('Missing userId or refreshToken');
     const response = await authService.refresh(userId, refreshToken);
-    console.log("🚀 ~ response:", response)
-    // Save new userId if rotated
     localStorage.setItem('userId', response.id || userId);
     return {
       token: response.access_token,
@@ -79,14 +78,7 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
-type AuthUser = {
-  id: string;
-  displayName: string;
-  email: string;
-  avatarUrl?: string;
-} | null;
-
-const initialState = {
+const initialState: AuthState = {
   user: (() => {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;

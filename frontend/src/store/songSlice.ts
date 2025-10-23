@@ -1,30 +1,25 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../services/api';
+import { SongState, FilterType } from './types';
 
 export const fetchFilterOptions = createAsyncThunk(
   'songs/fetchFilterOptions',
   async (type: string) => {
-    const res = await fetch(`/api/songs/${type}s`);
-    return { type, options: await res.json() };
+    const res = await api.get(`songs/${type}s`);
+    return { type, options: res.data };
   }
 );
 
 export const fetchFilteredSongs = createAsyncThunk(
   'songs/fetchFilteredSongs',
   async ({ type, value }: { type: string; value: string }) => {
-    let url = '/api/songs';
+    let url = 'songs';
     if (type !== 'all' && value) url += `?${type}=${encodeURIComponent(value)}`;
-    const res = await fetch(url);
-    return await res.json();
+
+    const res = await api.get(url);
+    return res.data;
   }
 );
-
-type FilterType = 'artist' | 'genre';
-
-interface SongState {
-  filterOptions: Record<FilterType, any[]>;
-  filter: { type: string; value: string };
-  songs: any[];
-}
 
 const initialState: SongState = {
   filterOptions: { artist: [], genre: [] },
