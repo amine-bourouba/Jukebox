@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { 
   MdPlaylistAdd, 
   MdShare, 
@@ -11,8 +12,10 @@ import {
   MdDownload,
   MdOutlineCancel,
 } from 'react-icons/md';
-import { useSelector } from 'react-redux';
+
+import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
 import { RootState } from '../../store/store';
+import { removeSongFromPlaylist } from "../../store/playerSlice";
 
 
 interface ContextMenuContextType {
@@ -100,7 +103,8 @@ interface ContextMenuProviderProps {
 }
 
 export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
-  const [state, dispatch] = useReducer(contextMenuReducer, initialState);
+  const dispatch = useDispatch();
+  const [state, dispatchContext] = useReducer(contextMenuReducer, initialState);
   const userPlaylists = useSelector((state: RootState) => state.player.playlists);
 
   const getMenuItems = useCallback((triggerType: string, data: any): ContextMenuItem[] => {
@@ -149,7 +153,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdOutlineCancel,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
-            onClick: () => console.log('Remove from playlist:', data.song?.title),
+            onClick: () => dispatch(removeSongFromPlaylist({ playlistId: data.playlistId, songId: data.song?.id })),
             separator: true,
           },
           {
@@ -232,32 +236,32 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
     config: ContextMenuConfig, 
     targetId?: string
   ) => {
-    dispatch({ 
+    dispatchContext({ 
       type: 'SHOW_MENU', 
       payload: { x, y, config, targetId } 
     });
   }, []);
 
   const hideMenu = useCallback(() => {
-    dispatch({ type: 'HIDE_MENU' });
+    dispatchContext({ type: 'HIDE_MENU' });
   }, []);
 
   const showSubmenu = useCallback((itemId: string, x: number, y: number) => {
-    dispatch({ 
+    dispatchContext({ 
       type: 'SHOW_SUBMENU', 
       payload: { itemId, x, y } 
     });
   }, []);
 
   const hideSubmenu = useCallback((itemId: string) => {
-    dispatch({ 
+    dispatchContext({ 
       type: 'HIDE_SUBMENU', 
       payload: { itemId } 
     });
   }, []);
 
   const hideAllSubmenus = useCallback(() => {
-    dispatch({ type: 'HIDE_ALL_SUBMENUS' });
+    dispatchContext({ type: 'HIDE_ALL_SUBMENUS' });
   }, []);
 
 

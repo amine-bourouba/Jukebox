@@ -25,6 +25,14 @@ export const fetchSelectedPlaylist = createAsyncThunk(
   }
 );
 
+export const removeSongFromPlaylist = createAsyncThunk(
+  'player/removeSongFromPlaylist',
+  async ({ playlistId, songId }: { playlistId: string; songId: string }) => {
+    await api.delete(`/playlists/${playlistId}/songs/${songId}`);
+    return { playlistId, songId };
+  }
+);
+
 const playerSlice = createSlice({
   name: 'player',
   initialState,
@@ -56,6 +64,29 @@ const playerSlice = createSlice({
       .addCase(fetchSelectedPlaylist.fulfilled, (state, action) => {
         state.selectedPlaylistId = action.payload.playlistId;
         state.selectedPlaylist = action.payload.songs;
+      })
+      .addCase(removeSongFromPlaylist.fulfilled, (state, action) => {
+        // Update selectedPlaylist if it matches
+        if (
+          state.selectedPlaylistId === action.payload.playlistId &&
+          Array.isArray(state.selectedPlaylist)
+        ) {
+          state.selectedPlaylist = state.selectedPlaylist.filter(
+            (song: any) => song.id !== action.payload.songId
+          );
+        }
+        // Update playlists array if you keep songs there too
+        // if (Array.isArray(state.playlists)) {
+        //   const playlist = state.playlists.find(
+        //     (pl: any) => pl.id === action.payload.playlistId
+        //   );
+        //   if (playlist && Array.isArray(playlist.songs)) {
+        //     playlist.songs = playlist.songs.filter(
+        //       (song: any) => song.id !== action.payload.songId
+        //     );
+        //   }
+        // }
+        //TODO: Double check the work logic above
       });
   }
 });
