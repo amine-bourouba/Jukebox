@@ -2,14 +2,17 @@ import React, { createContext, useContext, useReducer, useCallback } from 'react
 import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
 import { 
   MdPlaylistAdd, 
-  MdFavorite, 
   MdShare, 
   MdEdit, 
   MdDelete,
   MdPlayArrow,
   MdQueueMusic,
   MdFolder,
+  MdDownload,
+  MdOutlineCancel,
 } from 'react-icons/md';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 
 
 interface ContextMenuContextType {
@@ -91,141 +94,6 @@ function contextMenuReducer(state: ContextMenuState, action: ContextMenuAction):
   }
 }
 
-function getMenuItemsForContext(triggerType: string, data: any): ContextMenuItem[] {
-  switch (triggerType) {
-    case 'playlist-song':
-      return [
-        {
-          id: 'play',
-          label: 'Play Now',
-          icon: MdPlayArrow,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          onClick: () => console.log('Play song:', data.song?.title),
-        },
-        {
-          id: 'queue',
-          label: 'Add to Queue',
-          icon: MdQueueMusic,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          onClick: () => console.log('Add to queue:', data.song?.title),
-        },
-        {
-          id: 'playlist',
-          label: 'Add to Playlist',
-          icon: MdPlaylistAdd,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          // Submenu with nested options
-          submenu: [
-            {
-              id: 'new-playlist',
-              label: 'Create New Playlist',
-              icon: MdFolder,
-              color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-              onClick: () => console.log('Create new playlist for:', data.song?.title),
-            },
-            { id: 'separator', label: '', separator: true },
-            {
-              id: 'playlist-1',
-              label: 'Favorites',
-              color: 'text-white',
-              hoverColor: 'hover:bg-amethyst/20',
-              onClick: () => console.log('Add to Favorites playlist'),
-            },
-            {
-              id: 'playlist-2',
-              label: 'Workout Mix',
-              color: 'text-white',
-              hoverColor: 'hover:bg-amethyst/20',
-              onClick: () => console.log('Add to Workout Mix playlist'),
-            },
-            {
-              id: 'playlist-3',
-              label: 'Chill Vibes',
-              color: 'text-white',
-              hoverColor: 'hover:bg-amethyst/20',
-              onClick: () => console.log('Add to Chill Vibes playlist'),
-            }
-          ],
-          separator: true,
-        },
-        {
-          id: 'favorite',
-          label: 'Add to Favorites',
-          icon: MdFavorite,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          onClick: () => console.log('Add to favorites:', data.song?.title),
-        },
-        {
-          id: 'share',
-          label: 'Share Song link',
-          icon: MdShare,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          separator: true,
-        },
-        {
-          id: 'edit',
-          label: 'Edit Details',
-          icon: MdEdit,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          onClick: () => console.log('Edit song:', data.song?.title),
-        },
-        {
-          id: 'remove',
-          label: 'Remove from Playlist',
-          icon: MdDelete,
-          color: 'text-red-400',
-          hoverColor: 'hover:bg-red-500/10',
-          onClick: () => console.log('Remove song:', data.song?.title),
-        },
-      ];
-
-    case 'sidebar-playlist':
-      return [
-        {
-          id: 'play',
-          label: 'Play Playlist',
-          icon: MdPlayArrow,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          onClick: () => console.log('Play playlist:', data.title),
-        },
-        {
-          id: 'edit',
-          label: 'Edit Playlist',
-          icon: MdEdit,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          onClick: () => console.log('Edit playlist:', data.title),
-        },
-        {
-          id: 'share',
-          label: 'Share Playlist link',
-          icon: MdShare,
-          color: 'text-white',
-          hoverColor: 'hover:bg-amethyst/20',
-          separator: true,
-        },
-        {
-          id: 'delete',
-          label: 'Delete Playlist',
-          icon: MdDelete,
-          color: 'text-red-400',
-          hoverColor: 'hover:bg-red-500/10',
-          onClick: () => console.log('Delete playlist:', data.title),
-        },
-      ];
-
-    default:
-      return [];
-  }
-}
 
 interface ContextMenuProviderProps {
   children: React.ReactNode;
@@ -233,6 +101,130 @@ interface ContextMenuProviderProps {
 
 export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
   const [state, dispatch] = useReducer(contextMenuReducer, initialState);
+  const userPlaylists = useSelector((state: RootState) => state.player.playlists);
+
+  const getMenuItems = useCallback((triggerType: string, data: any): ContextMenuItem[] => {
+    
+    switch (triggerType) {
+      case 'playlist-song':
+        const playlistSubmenuItems = [
+          {
+            id: 'new-playlist',
+            label: 'Create New Playlist',
+            icon: MdFolder,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Create new playlist for:', data.song?.title),
+          },
+          { id: 'separator', label: '', separator: true },
+          ...userPlaylists!.map((playlist: any) => ({
+            id: `playlist-${playlist.id}`,
+            label: playlist.name || playlist.title,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Add to playlist:', playlist.name, 'song:', data.song?.title),
+          }))
+        ];
+
+        return [
+          {
+            id: 'queue',
+            label: 'Add to Queue',
+            icon: MdQueueMusic,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Add to queue:', data.song?.title),
+          },
+          {
+            id: 'playlist',
+            label: 'Add to Playlist',
+            icon: MdPlaylistAdd,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            submenu: playlistSubmenuItems,
+          },
+          {
+            id: 'remove',
+            label: 'Remove from Playlist',
+            icon: MdOutlineCancel,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Remove from playlist:', data.song?.title),
+            separator: true,
+          },
+          {
+            id: 'share',
+            label: 'Share Song link',
+            icon: MdShare,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+          },
+          {
+            id: 'edit',
+            label: 'Edit Details',
+            icon: MdEdit,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Edit song:', data.song?.title),
+          },
+          {
+            id: 'download',
+            label: 'Download Song',
+            icon: MdDownload,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Download song:', data.song?.title),
+          },
+          {
+            id: 'delete',
+            label: 'Delete song file',
+            icon: MdDelete,
+            color: 'text-red-400',
+            hoverColor: 'hover:bg-red-500/10',
+            onClick: () => console.log('delete song:', data.song?.title),
+          },
+        ];
+
+      case 'sidebar-playlist':
+        return [
+          {
+            id: 'play',
+            label: 'Play Playlist',
+            icon: MdPlayArrow,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Play playlist:', data.title),
+          },
+          {
+            id: 'edit',
+            label: 'Edit Playlist',
+            icon: MdEdit,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => console.log('Edit playlist:', data.title),
+          },
+          {
+            id: 'share',
+            label: 'Share Playlist link',
+            icon: MdShare,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            separator: true,
+          },
+          {
+            id: 'delete',
+            label: 'Delete Playlist',
+            icon: MdDelete,
+            color: 'text-red-400',
+            hoverColor: 'hover:bg-red-500/10',
+            onClick: () => console.log('Delete playlist:', data.title),
+          },
+        ];
+
+      default:
+        return [];
+    }
+  }, [userPlaylists]);
 
   const showMenu = useCallback((
     x: number, 
@@ -268,9 +260,6 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
     dispatch({ type: 'HIDE_ALL_SUBMENUS' });
   }, []);
 
-  const getMenuItems = useCallback((triggerType: string, data: any) => {
-    return getMenuItemsForContext(triggerType, data);
-  }, []);
 
   const value = {
     state,
