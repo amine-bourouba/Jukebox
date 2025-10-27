@@ -5,8 +5,13 @@ import { SongState, FilterType } from './types';
 export const fetchFilterOptions = createAsyncThunk(
   'songs/fetchFilterOptions',
   async (type: string) => {
-    const res = await api.get(`songs/${type}s`);
-    return { type, options: res.data };
+    try {
+      const res = await api.get(`songs/${type}s`);
+      return { type, options: res.data }
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      return error;
+    }
   }
 );
 
@@ -16,8 +21,13 @@ export const fetchFilteredSongs = createAsyncThunk(
     let url = 'songs';
     if (type !== 'all' && value) url += `?${type}=${encodeURIComponent(value)}`;
 
-    const res = await api.get(url);
-    return res.data;
+    try {
+      const res = await api.get(url);
+      return res.data;
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      return error;
+    }
   }
 );
 

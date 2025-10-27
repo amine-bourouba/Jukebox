@@ -13,23 +13,48 @@ const initialState: PlayerState = {
 };
 
 export const fetchPlaylists = createAsyncThunk('player/fetchPlaylists', async () => {
-  const res = await api.get('/playlists');
-  return res.data;
+  try {
+    const res = await api.get('/playlists');
+    return res.data;
+  } catch (error) {
+    console.log("🚀 ~ error:", error)
+  }
 });
 
 export const fetchSelectedPlaylist = createAsyncThunk(
   'player/fetchSelectedPlaylist',
   async (playlistId: string) => {
-    const res = await api.get(`/playlists/${playlistId}`);
-    return { playlistId, songs: res.data };
+    try {
+      const res = await api.get(`/playlists/${playlistId}`);
+      return { playlistId, songs: res.data };
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      return error
+    }
+  }
+);
+
+export const addSongToPlaylist = createAsyncThunk(
+  'player/addSongToPlaylist',
+  async ({ playlistId, songId }: { playlistId: string; songId: string }) => {
+    try {
+      await api.post(`/playlists/${playlistId}/songs`, { songId });
+    } catch (error) {
+      console.log("🚀 ~ error:", error)
+    }
   }
 );
 
 export const removeSongFromPlaylist = createAsyncThunk(
   'player/removeSongFromPlaylist',
   async ({ playlistId, songId }: { playlistId: string; songId: string }) => {
-    await api.delete(`/playlists/${playlistId}/songs/${songId}`);
-    return { playlistId, songId };
+    try {
+      await api.delete(`/playlists/${playlistId}/songs/${songId}`);
+      return { playlistId, songId };
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      return error;
+    }
   }
 );
 
