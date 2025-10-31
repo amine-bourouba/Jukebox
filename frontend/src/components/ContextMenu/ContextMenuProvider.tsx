@@ -16,6 +16,7 @@ import {
 import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
 import { RootState } from '../../store/store';
 import { removeSongFromPlaylist } from "../../store/playerSlice";
+import { downloadSong } from '../../store/songSlice';
 
 
 interface ContextMenuContextType {
@@ -177,7 +178,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdDownload,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
-            onClick: () => console.log('Download song:', data.song?.title),
+            onClick: () => dispatch(downloadSong(data.song)),
           },
           {
             id: 'delete',

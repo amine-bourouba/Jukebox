@@ -9,7 +9,6 @@ export const fetchFilterOptions = createAsyncThunk(
       const res = await api.get(`songs/${type}s`);
       return { type, options: res.data }
     } catch (error) {
-      console.log("🚀 ~ error:", error);
       return error;
     }
   }
@@ -26,7 +25,26 @@ export const fetchFilteredSongs = createAsyncThunk(
       return res.data;
     } catch (error) {
       console.log("🚀 ~ error:", error);
-      return error;
+    }
+  }
+);
+
+export const downloadSong = createAsyncThunk(
+  'songs/downloadSong',
+  async (song: any) => {
+    try {
+      const res = await api.get(`/songs/${song.id}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${song.artist} - ${song.title}.mp3`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
     }
   }
 );
@@ -54,7 +72,13 @@ const songSlice = createSlice({
         }
       })
       .addCase(fetchFilteredSongs.fulfilled, (state, action) => {
-        state.songs = action.payload.sort((a: any, b: any) => a.title.localeCompare(b.title));
+        if (action.payload &&action.payload.status !== 404) {
+          console.log("🚀 ~ action.payload:", action.payload)
+          state.songs = action.payload.sort((a: any, b: any) => a.title.localeCompare(b.title));
+        }
+      })
+      .addCase(downloadSong.fulfilled, (state, action) => {
+        // Handle successful download if needed
       });
   },
 });
