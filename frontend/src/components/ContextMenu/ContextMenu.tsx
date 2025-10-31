@@ -131,7 +131,7 @@ export default function ContextMenu() {
         <div
           key={submenuId}
           data-submenu={submenuId}
-          className="bg-shadow border border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-48"
+          className="bg-shadow border border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-48 max-h-48 overflow-y-auto"
           style={getMenuPosition(true, submenuId)}
           role="menu"
           aria-orientation="vertical"
@@ -142,7 +142,7 @@ export default function ContextMenu() {
                 key={item.id}
                 item={item}
                 onItemClick={handleItemClick}
-                level={1} // Track nesting level
+                level={1}
               />
             ))}
           </div>

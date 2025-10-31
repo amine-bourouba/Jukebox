@@ -40,7 +40,7 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
     if (isSubmenuOpen) {
       hoverTimeoutRef.current = setTimeout(() => {
         hideSubmenu(item.id);
-      }, 5000);
+      }, 3000);
     }
   }, [item.id, isSubmenuOpen, hideSubmenu]);
 
