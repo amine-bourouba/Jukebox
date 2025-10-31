@@ -26,6 +26,14 @@ function fileName(req: any, file: Express.Multer.File, callback: (error: Error |
   callback(null, uniqueSuffix + extname(file.originalname));
 }
 
+function resolveSongFilePath(song: any): string {
+  if (!song) throw new NotFoundException('Song not found');
+  if (!song.filePath) throw new BadRequestException('Song file not available');
+  const filePath = join(process.cwd(), song.filePath.replace(/\\/g, '/'));
+  if (!existsSync(filePath)) throw new NotFoundException('Song file does not exist');
+  return filePath;
+}
+
 @Controller('songs')
 export class SongsController {
   constructor(
@@ -231,20 +239,33 @@ export class SongsController {
   @UseGuards(JwtAuthGuard)
   @Get(':id/stream')
   async streamSong(
-    @Req() req: any,
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response
   ): Promise<StreamableFile> {
     const song = await this.songsService.getSongById(id);
-    if (!song) throw new NotFoundException('Song not found');
-    if (!song.filePath) throw new BadRequestException('Song file not available');
-
-    const filePath = join(process.cwd(), song.filePath.replace(/\\/g, '/'));
-    if (!existsSync(filePath)) throw new NotFoundException('Song file does not exist');
+    const filePath = resolveSongFilePath(song);
 
     res.set({
       'Content-Type': 'audio/mpeg',
-      'Content-Disposition': `inline; filename="${song.title}.mp3"`,
+      'Content-Disposition': `inline; filename="${song?.title}.mp3"`,
+    });
+
+    const fileStream = createReadStream(filePath);
+    return new StreamableFile(fileStream);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/download')
+  async downloadSong(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<StreamableFile> {
+    const song = await this.songsService.getSongById(id);
+    const filePath = resolveSongFilePath(song);
+
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Disposition': `attachment; filename="${song?.title}.mp3"`,
     });
 
     const fileStream = createReadStream(filePath);
