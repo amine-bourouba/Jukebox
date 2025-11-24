@@ -36,9 +36,13 @@ export const fetchSelectedPlaylist = createAsyncThunk(
 
 export const addSongToPlaylist = createAsyncThunk(
   'player/addSongToPlaylist',
-  async ({ playlistId, songId }: { playlistId: string; songId: string }) => {
+  async ({ playlistId, songId }: { playlistId: string; songId: string }, { dispatch, getState }) => {
     try {
       await api.post(`/playlists/${playlistId}/songs`, { songId });
+      const state = getState() as { player: PlayerState };
+      if (state.player.selectedPlaylistId === playlistId) {
+        dispatch(fetchSelectedPlaylist(playlistId));
+      }
     } catch (error) {
       console.log("🚀 ~ error:", error)
     }
@@ -47,13 +51,15 @@ export const addSongToPlaylist = createAsyncThunk(
 
 export const removeSongFromPlaylist = createAsyncThunk(
   'player/removeSongFromPlaylist',
-  async ({ playlistId, songId }: { playlistId: string; songId: string }) => {
+  async ({ playlistId, songId }: { playlistId: string; songId: string }, { dispatch, getState }) => {
     try {
       await api.delete(`/playlists/${playlistId}/songs/${songId}`);
-      return { playlistId, songId };
+      const state = getState() as { player: PlayerState };
+      if (state.player.selectedPlaylistId === playlistId) {
+        dispatch(fetchSelectedPlaylist(playlistId));
+      }
     } catch (error) {
       console.log("🚀 ~ error:", error);
-      return error;
     }
   }
 );
