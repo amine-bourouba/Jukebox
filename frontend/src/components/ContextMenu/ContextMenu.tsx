@@ -120,42 +120,10 @@ export default function ContextMenu() {
     return null;
   }
 
-  const renderSubmenus = () => {
-    return Object.entries(state.submenuStates).map(([submenuId, submenuState]) => {
-      if (!submenuState.isOpen) return null;
-
-      const submenuItems = findSubmenuItems(state.config!.items, submenuId);
-      if (!submenuItems) return null;
-
-      return createPortal(
-        <div
-          key={submenuId}
-          data-submenu={submenuId}
-          className="bg-shadow border border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-48 max-h-48 overflow-y-auto"
-          style={getMenuPosition(true, submenuId)}
-          role="menu"
-          aria-orientation="vertical"
-        >
-          <div className="py-1">
-            {submenuItems.map(item => (
-              <MenuItem
-                key={item.id}
-                item={item}
-                onItemClick={handleItemClick}
-                level={1}
-              />
-            ))}
-          </div>
-        </div> as React.ReactNode,
-        document.body
-      );
-    });
-  };
-
   const mainMenu = createPortal(
     <div
       ref={menuRef}
-      className="bg-shadow border border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-48"
+      className="bg-shadow border border-gray-700 rounded-lg shadow-xl min-w-48"
       style={getMenuPosition()}
       role="menu"
       aria-orientation="vertical"
@@ -175,9 +143,8 @@ export default function ContextMenu() {
   );
 
   return (
-    <>
-      {mainMenu}
-      {renderSubmenus()}
-    </>
-  );
+  <>
+    {mainMenu}
+  </>
+);
 }

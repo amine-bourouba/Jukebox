@@ -1,8 +1,6 @@
-import React, { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { ContextMenuItem } from './types';
-import { useContextMenu } from './ContextMenuProvider';
 import { MdChevronRight } from 'react-icons/md';
-
 
 interface MenuItemProps {
   item: ContextMenuItem;
@@ -11,53 +9,55 @@ interface MenuItemProps {
 }
 
 export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps) {
-  const { state, showSubmenu, hideSubmenu } = useContextMenu();
   const itemRef = useRef<HTMLButtonElement>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout>(null);
-  
-  const isSubmenuOpen = Boolean(state.submenuStates[item.id]?.isOpen);
+  const submenuRef = useRef<HTMLDivElement>(null);
+  const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
+  const [submenuPosition, setSubmenuPosition] = useState<'right' | 'left'>('right');
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseEnter = useCallback(() => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-
     if (item.submenu && item.submenu.length > 0) {
-      hoverTimeoutRef.current = setTimeout(() => {
-        if (itemRef.current) {
-          const rect = itemRef.current.getBoundingClientRect();
-          showSubmenu(item.id, rect.right + 4, rect.top);
-        }
-      }, 200);
+      setIsSubmenuOpen(true);
     }
-  }, [item.id, item.submenu, showSubmenu]);
+  }, [item.submenu]);
 
   const handleMouseLeave = useCallback(() => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-
-    if (isSubmenuOpen) {
+    if (item.submenu && item.submenu.length > 0) {
       hoverTimeoutRef.current = setTimeout(() => {
-        hideSubmenu(item.id);
-      }, 3000);
+        setIsSubmenuOpen(false);
+      }, 150);
     }
-  }, [item.id, isSubmenuOpen, hideSubmenu]);
+  }, [item.submenu]);
 
   const handleClick = useCallback(() => {
-    if (item.submenu && item.submenu.length > 0) {
-      if (isSubmenuOpen) {
-        hideSubmenu(item.id);
-      } else if (itemRef.current) {
-        const rect = itemRef.current.getBoundingClientRect();
-        showSubmenu(item.id, rect.right + 4, rect.top);
-      }
-    } else if (item.onClick && !item.disabled) {
+    if (item.onClick && !item.disabled) {
       onItemClick(item);
     }
-  }, [item, isSubmenuOpen, showSubmenu, hideSubmenu, onItemClick]);
+  }, [item, onItemClick]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (isSubmenuOpen && itemRef.current && submenuRef.current) {
+      const parentRect = itemRef.current.getBoundingClientRect();
+      const submenuWidth = 192; // min-w-48 = 12rem = 192px
+      const viewportWidth = window.innerWidth;
+
+      // Check if there's enough space on the right
+      const spaceOnRight = viewportWidth - parentRect.right;
+      if (spaceOnRight < submenuWidth && parentRect.left > submenuWidth) {
+        setSubmenuPosition('left');
+      } else {
+        setSubmenuPosition('right');
+      }
+    }
+  }, [isSubmenuOpen]);
+
+  useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
         clearTimeout(hoverTimeoutRef.current);
@@ -72,7 +72,11 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
   const hasSubmenu = item.submenu && item.submenu.length > 0;
 
   return (
-    <>
+    <div
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
         ref={itemRef}
         className={`
@@ -84,8 +88,6 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
           ${isSubmenuOpen ? 'bg-amethyst/20' : ''}
         `}
         onClick={handleClick}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
         disabled={item.disabled}
         role="menuitem"
         aria-haspopup={hasSubmenu ? 'menu' : undefined}
@@ -104,9 +106,29 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
           <MdChevronRight className="text-sm text-gray-400" />
         )}
       </button>
-      
-      {/* Separator after item if specified */}
+      {hasSubmenu && isSubmenuOpen && (
+        <div
+          ref={submenuRef}
+          className={`
+            absolute top-0 min-w-48 max-h-64 overflow-y-auto bg-shadow border border-gray-700 rounded-lg shadow-xl z-[10000]
+            ${submenuPosition === 'right' ? 'left-full ml-1' : 'right-full mr-1'}
+          `}
+          role="menu"
+          aria-orientation="vertical"
+        >
+          <div className="py-1">
+            {item.submenu?.map(subItem => (
+              <MenuItem
+                key={subItem.id}
+                item={subItem}
+                onItemClick={onItemClick}
+                level={level + 1}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       {item.separator && <div className="border-t border-gray-600 my-1" />}
-    </>
+    </div>
   );
 }
