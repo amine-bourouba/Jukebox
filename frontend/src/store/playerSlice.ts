@@ -1,6 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import api from '../services/api';
 import { PlayerState, Track } from './types';
+import { snackbar } from '../services/snackbar';
+
 
 const initialState: PlayerState = {
   currentTrack: null,
@@ -43,6 +45,10 @@ export const addSongToPlaylist = createAsyncThunk(
       if (state.player.selectedPlaylistId === playlistId) {
         dispatch(fetchSelectedPlaylist(playlistId));
       }
+      snackbar.show({
+        message: 'Song added!',
+        color: 'bg-green-500'
+      });
     } catch (error) {
       console.log("🚀 ~ error:", error)
     }
