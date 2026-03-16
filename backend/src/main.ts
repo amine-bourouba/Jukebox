@@ -10,7 +10,7 @@ async function bootstrap() {
   app.setGlobalPrefix(globalPrefix);
   const port = process.env.PORT || 3000;
   app.enableCors({
-    origin: 'http://localhost:8000', // Frontend URL
+    origin: ['http://localhost:8000', 'http://localhost:8080'],
     credentials: true,
   });
   await app.listen(port);

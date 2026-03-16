@@ -1,7 +1,6 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { analyzer } from 'vite-bundle-analyzer'
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -15,7 +14,6 @@ export default defineConfig(() => ({
     host: 'localhost',
   },
   plugins: [
-    analyzer(),
     react()
   ],
   // Uncomment this if you are using workers.
