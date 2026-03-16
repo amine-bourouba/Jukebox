@@ -109,6 +109,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
   const userPlaylists = useSelector((state: RootState) => state.player.playlists);
 
   const getMenuItems = useCallback((triggerType: string, data: any): ContextMenuItem[] => {
+    console.log("🚀 ~ ContextMenuProvider ~ data:", data)
     
     switch (triggerType) {
       case 'playlist-song':
@@ -128,7 +129,6 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
             onClick: () => dispatch(addSongToPlaylist({ playlistId: playlist.id, songId: data.song?.id })),
-            // onClick: () => console.log('Add to playlist:', playlist.name, 'song:', data.song?.title),
           }))
         ];
 
@@ -187,7 +187,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdDelete,
             color: 'text-red-400',
             hoverColor: 'hover:bg-red-500/10',
-            onClick: () => console.log('delete song:', data.song?.title),
+            onClick: () => dispatch(deleteSong(data.songId)),
           },
         ];
 

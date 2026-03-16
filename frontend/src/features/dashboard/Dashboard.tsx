@@ -11,12 +11,12 @@ export default function Dashboard() {
   const { currentTrack } = useSelector((state: RootState) => state.player);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-midnight via-sapphire to-amethyst flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-midnight via-sapphire to-amethyst flex flex-col overflow-hidden">
       <Header />
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 flex flex-col">
-          <div className="flex-1 flex flex-row">
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-row overflow-hidden">
             <div className={`${currentTrack ? 'basis-3/4' : 'flex-1'}`}>
               <SongList />
             </div>

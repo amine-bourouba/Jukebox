@@ -26,7 +26,38 @@ export class SongsService {
   async deleteSong(userId: string, id: string) {
     const song = await this.prisma.song.findUnique({ where: { id } });
     if (!song || song.ownerId !== userId) throw new ForbiddenException('Unauthorized');
+    
+    // Remove song from all playlists
+    await this.prisma.playlistSong.deleteMany({
+      where: { songId: id }
+    });
+    
+    // Delete the song record
     await this.prisma.song.delete({ where: { id } });
+    
+    // Delete physical files if they exist
+    if (song.filePath) {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      try {
+        const filePath = path.join(process.cwd(), song.filePath);
+        await fs.unlink(filePath);
+      } catch (error) {
+        console.error('Failed to delete song file:', error);
+      }
+    }
+    
+    if (song.coverImageUrl) {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      try {
+        const coverPath = path.join(process.cwd(), song.coverImageUrl);
+        await fs.unlink(coverPath);
+      } catch (error) {
+        console.error('Failed to delete cover image:', error);
+      }
+    }
+    
     return true;
   }
 

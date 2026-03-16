@@ -49,6 +49,18 @@ export const downloadSong = createAsyncThunk(
   }
 );
 
+export const deleteSong = createAsyncThunk(
+  'songs/deleteSong',
+  async (songId: string, { rejectWithValue }) => {
+    try {
+      await api.delete(`/songs/${songId}`);
+      return songId;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete song');
+    }
+  }
+);
+
 const initialState: SongState = {
   filterOptions: { artist: [], genre: [] },
   filter: { type: 'all', value: '' },
@@ -79,6 +91,9 @@ const songSlice = createSlice({
       })
       .addCase(downloadSong.fulfilled, (state, action) => {
         // Handle successful download if needed
+      })
+      .addCase(deleteSong.fulfilled, (state, action) => {
+        state.songs = state.songs.filter(song => song.id !== action.payload);
       });
   },
 });
