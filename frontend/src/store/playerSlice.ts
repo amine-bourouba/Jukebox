@@ -64,6 +64,7 @@ export const removeSongFromPlaylist = createAsyncThunk(
       if (state.player.selectedPlaylistId === playlistId) {
         dispatch(fetchSelectedPlaylist(playlistId));
       }
+      return { playlistId, songId };
     } catch (error) {
       console.log("🚀 ~ error:", error);
     }

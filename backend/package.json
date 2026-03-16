@@ -41,6 +41,7 @@
   "scripts": {
     "start": "nest start --watch",
     "build": "nest build",
-    "test": "vitest run --watch"
+    "test": "vitest run --mode test",
+    "test:watch": "vitest run --mode test --watch"
   }
 }
