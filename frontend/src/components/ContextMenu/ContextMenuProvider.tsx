@@ -16,7 +16,7 @@ import {
 import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
 import { RootState } from '../../store/store';
 import { addSongToPlaylist, removeSongFromPlaylist } from "../../store/playerSlice";
-import { downloadSong } from '../../store/songSlice';
+import { downloadSong, deleteSong } from '../../store/songSlice';
 
 
 interface ContextMenuContextType {
