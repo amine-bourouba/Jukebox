@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../store/authSlice';
@@ -160,5 +160,121 @@ describe('Player', () => {
     const audioEl = document.querySelector('audio') as HTMLAudioElement;
     expect(audioEl).toBeTruthy();
     expect(audioEl.src).toBe('blob:http://localhost/audio');
+  });
+
+  it('should toggle shuffle on click', async () => {
+    renderPlayer({ shuffle: false });
+    fireEvent.click(screen.getByTitle('Shuffle: Off'));
+    await waitFor(() => {
+      expect(screen.getByTitle('Shuffle: On')).toBeInTheDocument();
+    });
+  });
+
+  it('should cycle repeat mode on click', async () => {
+    renderPlayer({ repeat: 'off' });
+    fireEvent.click(screen.getByTitle('Repeat: off'));
+    await waitFor(() => {
+      expect(screen.getByTitle('Repeat: one')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTitle('Repeat: one'));
+    await waitFor(() => {
+      expect(screen.getByTitle('Repeat: all')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTitle('Repeat: all'));
+    await waitFor(() => {
+      expect(screen.getByTitle('Repeat: off')).toBeInTheDocument();
+    });
+  });
+
+  it('should go to next track on next click', async () => {
+    renderPlayer();
+    fireEvent.click(screen.getByTitle('Next'));
+    await waitFor(() => {
+      expect(screen.getByText('Next Song')).toBeInTheDocument();
+    });
+  });
+
+  it('should go to previous track on prev click', async () => {
+    renderPlayer({
+      currentTrack: { id: 's2', title: 'Next Song', artist: 'Other Artist', streamUrl: '' },
+    });
+    fireEvent.click(screen.getByTitle('Previous'));
+    await waitFor(() => {
+      expect(screen.getByText('Test Song')).toBeInTheDocument();
+    });
+  });
+
+  it('should wrap to first track on next at end with repeat all', async () => {
+    renderPlayer({
+      currentTrack: { id: 's2', title: 'Next Song', artist: 'Other Artist', streamUrl: '' },
+      repeat: 'all',
+    });
+    fireEvent.click(screen.getByTitle('Next'));
+    await waitFor(() => {
+      expect(screen.getByText('Test Song')).toBeInTheDocument();
+    });
+  });
+
+  it('should wrap to last track on prev at start with repeat all', async () => {
+    renderPlayer({
+      currentTrack: { id: 's1', title: 'Test Song', artist: 'Test Artist', streamUrl: '' },
+      repeat: 'all',
+    });
+    fireEvent.click(screen.getByTitle('Previous'));
+    await waitFor(() => {
+      expect(screen.getByText('Next Song')).toBeInTheDocument();
+    });
+  });
+
+  it('should seek on progress bar click', () => {
+    renderPlayer();
+    vi.clearAllMocks();
+    const progressBar = document.querySelector('.cursor-pointer')!;
+    Object.defineProperty(progressBar, 'getBoundingClientRect', {
+      value: () => ({ left: 0, width: 200, top: 0, height: 10, right: 200, bottom: 10, x: 0, y: 0, toJSON: () => ({}) }),
+      configurable: true,
+    });
+    fireEvent.click(progressBar, { clientX: 100 });
+    expect(mockSeek).toHaveBeenCalledWith(90); // 50% of 180
+  });
+
+  it('should change volume on slider input', () => {
+    renderPlayer();
+    const slider = document.querySelector('input[type="range"]') as HTMLInputElement;
+    fireEvent.change(slider, { target: { value: '0.5' } });
+    expect(mockAudioRef.current.volume).toBe(0.5);
+  });
+
+  it('should seek to start and play when track ends with repeat one', () => {
+    renderPlayer({ repeat: 'one' });
+    vi.clearAllMocks();
+    const audio = document.querySelector('audio')!;
+    fireEvent(audio, new Event('ended'));
+    expect(mockSeek).toHaveBeenCalledWith(0);
+    expect(mockPlay).toHaveBeenCalled();
+  });
+
+  it('should go to next track when track ends without repeat one', async () => {
+    renderPlayer({ repeat: 'off' });
+    vi.clearAllMocks();
+    const audio = document.querySelector('audio')!;
+    fireEvent(audio, new Event('ended'));
+    await waitFor(() => {
+      expect(screen.getByText('Next Song')).toBeInTheDocument();
+    });
+  });
+
+  it('should render cover image when coverUrl exists', () => {
+    renderPlayer({
+      currentTrack: { id: 's1', title: 'Test Song', artist: 'Test Artist', coverUrl: 'http://example.com/cover.jpg', streamUrl: '' },
+    });
+    const img = screen.getByAltText('cover');
+    expect(img).toHaveAttribute('src', 'http://example.com/cover.jpg');
+  });
+
+  it('should not change track on next when queue is empty', () => {
+    renderPlayer({ queue: [], currentTrack: { id: 's1', title: 'Test Song', artist: 'Test Artist', streamUrl: '' } });
+    fireEvent.click(screen.getByTitle('Next'));
+    expect(screen.getByText('Test Song')).toBeInTheDocument();
   });
 });
