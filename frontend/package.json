@@ -7,7 +7,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run --mode test",
-    "test:watch": "vitest run --mode test --watch"
+    "test:watch": "vitest run --mode test --watch",
+    "test:coverage": "vitest run --mode test --coverage"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.12",

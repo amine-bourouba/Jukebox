@@ -42,6 +42,7 @@
     "start": "nest start --watch",
     "build": "nest build",
     "test": "vitest run --mode test",
-    "test:watch": "vitest run --mode test --watch"
+    "test:watch": "vitest run --mode test --watch",
+    "test:coverage": "vitest run --mode test --coverage"
   }
 }
