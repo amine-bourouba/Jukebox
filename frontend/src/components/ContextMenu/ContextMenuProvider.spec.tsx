@@ -6,12 +6,24 @@ import playerReducer from '../../store/playerSlice';
 import { ContextMenuProvider, useContextMenu as useContextMenuFromProvider } from './ContextMenuProvider';
 
 // Mock api
+const mockApiGet = vi.fn().mockResolvedValue({ data: [] });
 vi.mock('../../services/api', () => ({
   default: {
-    get: vi.fn().mockResolvedValue({ data: [] }),
+    get: mockApiGet,
     post: vi.fn().mockResolvedValue({ data: {} }),
     delete: vi.fn().mockResolvedValue({ data: {} }),
   },
+}));
+
+vi.mock('../../services/snackbar', () => ({
+  snackbar: { show: vi.fn() },
+}));
+
+const mockShareSongLink = vi.fn();
+const mockSharePlaylistLink = vi.fn();
+vi.mock('../../services/share', () => ({
+  shareSongLink: (...args: any[]) => mockShareSongLink(...args),
+  sharePlaylistLink: (...args: any[]) => mockSharePlaylistLink(...args),
 }));
 
 function createStore(playlists: any[] = []) {
@@ -200,5 +212,63 @@ describe('ContextMenuProvider', () => {
     expect(() => {
       renderHook(() => useContextMenuFromProvider());
     }).toThrow('useContextMenu must be used within a ContextMenuProvider');
+  });
+
+  it('addToQueue menu item should dispatch addToQueue', () => {
+    const playlists = [{ id: 'p1', title: 'My Playlist' }];
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(playlists),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Test Song', artist: 'Artist', streamUrl: '/s' },
+    });
+
+    const queueItem = items.find((i: any) => i.id === 'queue');
+    expect(queueItem).toBeDefined();
+    expect(queueItem!.onClick).toBeInstanceOf(Function);
+  });
+
+  it('playPlaylist menu item should dispatch playPlaylist thunk', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('sidebar-playlist', { id: 'p1', title: 'Test' });
+    const playItem = items.find((i: any) => i.id === 'play');
+
+    expect(playItem).toBeDefined();
+    expect(playItem!.onClick).toBeInstanceOf(Function);
+  });
+
+  it('share song menu item should call shareSongLink', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Test Song' },
+    });
+
+    const shareItem = items.find((i: any) => i.id === 'share');
+    act(() => {
+      shareItem!.onClick!();
+    });
+
+    expect(mockShareSongLink).toHaveBeenCalledWith('s1');
+  });
+
+  it('share playlist menu item should call sharePlaylistLink', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('sidebar-playlist', { id: 'p1', title: 'Test' });
+    const shareItem = items.find((i: any) => i.id === 'share');
+    act(() => {
+      shareItem!.onClick!();
+    });
+
+    expect(mockSharePlaylistLink).toHaveBeenCalledWith('p1');
   });
 });

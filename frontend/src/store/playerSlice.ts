@@ -71,6 +71,20 @@ export const removeSongFromPlaylist = createAsyncThunk(
   }
 );
 
+export const playPlaylist = createAsyncThunk(
+  'player/playPlaylist',
+  async (playlistId: string, { dispatch }) => {
+    const res = await api.get(`/playlists/${playlistId}`);
+    const songs = res.data.playlistSongs?.map((ps: any) => ps.song) ?? [];
+    if (songs.length === 0) {
+      snackbar.show({ message: 'Playlist is empty', color: 'bg-yellow-500' });
+      return;
+    }
+    dispatch(setQueue(songs));
+    dispatch(setTrack(songs[0]));
+  }
+);
+
 const playerSlice = createSlice({
   name: 'player',
   initialState,
@@ -83,6 +97,10 @@ const playerSlice = createSlice({
     },
     setQueue(state, action: PayloadAction<Track[]>) {
       state.queue = action.payload;
+    },
+    addToQueue(state, action: PayloadAction<Track>) {
+      state.queue.push(action.payload);
+      snackbar.show({ message: `"${action.payload.title}" added to queue`, color: 'bg-green-500' });
     },
     setRepeat(state, action: PayloadAction<'off' | 'one' | 'all'>) {
       state.repeat = action.payload;
@@ -129,5 +147,5 @@ const playerSlice = createSlice({
   }
 });
 
-export const { setTrack, clearTrack, setQueue, setRepeat, setShuffle, setSelectedPlaylist } = playerSlice.actions;
+export const { setTrack, clearTrack, setQueue, addToQueue, setRepeat, setShuffle, setSelectedPlaylist } = playerSlice.actions;
 export default playerSlice.reducer;

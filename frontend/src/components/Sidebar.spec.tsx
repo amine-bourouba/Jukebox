@@ -6,9 +6,10 @@ import playerReducer from '../store/playerSlice';
 import songsReducer from '../store/songSlice';
 
 // Mock ContextMenu hook
+const mockShowContextMenu = vi.fn();
 vi.mock('./ContextMenu/useContextMenu', () => ({
   useContextMenu: () => ({
-    showContextMenu: vi.fn(),
+    showContextMenu: mockShowContextMenu,
   }),
 }));
 
@@ -108,5 +109,18 @@ describe('Sidebar', () => {
   it('should render empty playlists section gracefully', () => {
     renderSidebar([]);
     expect(screen.getByText('Your Playlists')).toBeInTheDocument();
+  });
+
+  it('should pass playlist data on right-click context menu', () => {
+    const playlists = [{ id: 'p1', title: 'Chill Vibes' }];
+    renderSidebar(playlists);
+
+    fireEvent.contextMenu(screen.getByText('Chill Vibes'));
+
+    expect(mockShowContextMenu).toHaveBeenCalledWith(
+      expect.any(Object),
+      'sidebar-playlist',
+      expect.objectContaining({ id: 'p1', title: 'Chill Vibes' })
+    );
   });
 });

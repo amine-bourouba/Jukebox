@@ -49,8 +49,8 @@ export default function Sidebar() {
     dispatch(fetchSelectedPlaylist(playlistId));
   };
 
-  const handleContextMenu = (event: React.MouseEvent) => {
-    showContextMenu(event, 'sidebar-playlist', null);
+  const handleContextMenu = (event: React.MouseEvent, playlist: any) => {
+    showContextMenu(event, 'sidebar-playlist', playlist);
   };
 
   return (
@@ -108,7 +108,7 @@ export default function Sidebar() {
                 `}
                 // onClick={() => handlePlaylistClick(pl.id)}
                 onClick={() => {handlePlaylistClick(pl.id); }}
-                onContextMenu={handleContextMenu}
+                onContextMenu={(e) => handleContextMenu(e, pl)}
               >
                 <TbPlaylist size={24} className="text-white mr-2" />
                 <div className="ml-1">

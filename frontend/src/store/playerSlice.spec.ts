@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer, {
-  setTrack, clearTrack, setQueue, setRepeat, setShuffle, setSelectedPlaylist,
-  fetchPlaylists, fetchSelectedPlaylist, addSongToPlaylist, removeSongFromPlaylist,
+  setTrack, clearTrack, setQueue, addToQueue, setRepeat, setShuffle, setSelectedPlaylist,
+  fetchPlaylists, fetchSelectedPlaylist, addSongToPlaylist, removeSongFromPlaylist, playPlaylist,
 } from './playerSlice';
 import api from '../services/api';
 
@@ -71,6 +71,28 @@ describe('playerSlice', () => {
       store.dispatch(setQueue(queue));
 
       expect(store.getState().player.queue).toEqual(queue);
+    });
+
+    it('addToQueue should append a track to the queue', () => {
+      const store = createStore({
+        ...defaultState,
+        queue: [{ id: 't1', title: 'S1', artist: 'A', streamUrl: '/s1' }],
+      });
+      const newTrack = { id: 't2', title: 'S2', artist: 'B', streamUrl: '/s2' };
+
+      store.dispatch(addToQueue(newTrack));
+
+      expect(store.getState().player.queue).toHaveLength(2);
+      expect(store.getState().player.queue[1]).toEqual(newTrack);
+    });
+
+    it('addToQueue should not add duplicate tracks', () => {
+      const track = { id: 't1', title: 'S1', artist: 'A', streamUrl: '/s1' };
+      const store = createStore({ ...defaultState, queue: [track] });
+
+      store.dispatch(addToQueue(track));
+
+      expect(store.getState().player.queue).toHaveLength(1);
     });
 
     it('setRepeat should update repeat mode', () => {
@@ -172,6 +194,37 @@ describe('playerSlice', () => {
       await store.dispatch(removeSongFromPlaylist({ playlistId: 'pl-1', songId: 'song-1' }));
 
       expect(api.get).toHaveBeenCalledWith('/playlists/pl-1');
+    });
+  });
+
+  describe('playPlaylist thunk', () => {
+    it('should fetch playlist, set queue and play first song', async () => {
+      const playlistSongs = [
+        { song: { id: 's1', title: 'Song 1', artist: 'A', streamUrl: '/s1' } },
+        { song: { id: 's2', title: 'Song 2', artist: 'B', streamUrl: '/s2' } },
+      ];
+      (api.get as any).mockResolvedValue({ data: { playlistSongs } });
+
+      const store = createStore(defaultState);
+      await store.dispatch(playPlaylist('pl-1'));
+
+      expect(api.get).toHaveBeenCalledWith('/playlists/pl-1');
+      const state = store.getState().player;
+      expect(state.queue).toHaveLength(2);
+      expect(state.currentTrack?.id).toBe('s1');
+    });
+
+    it('should show snackbar when playlist is empty', async () => {
+      (api.get as any).mockResolvedValue({ data: { playlistSongs: [] } });
+      const { snackbar } = await import('../services/snackbar');
+
+      const store = createStore(defaultState);
+      await store.dispatch(playPlaylist('pl-1'));
+
+      expect(snackbar.show).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'Playlist is empty' })
+      );
+      expect(store.getState().player.queue).toHaveLength(0);
     });
   });
 });

@@ -15,8 +15,10 @@ import {
 
 import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
 import { RootState } from '../../store/store';
-import { addSongToPlaylist, removeSongFromPlaylist } from "../../store/playerSlice";
+import { addSongToPlaylist, removeSongFromPlaylist, addToQueue, playPlaylist } from "../../store/playerSlice";
 import { downloadSong, deleteSong } from '../../store/songSlice';
+import { snackbar } from '../../services/snackbar';
+import { shareSongLink, sharePlaylistLink } from '../../services/share';
 
 
 interface ContextMenuContextType {
@@ -139,7 +141,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdQueueMusic,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
-            onClick: () => console.log('Add to queue:', data.song?.title),
+            onClick: () => dispatch(addToQueue(data.song)),
           },
           {
             id: 'playlist',
@@ -164,6 +166,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdShare,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => shareSongLink(data.song?.id),
           },
           {
             id: 'edit',
@@ -199,7 +202,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdPlayArrow,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
-            onClick: () => console.log('Play playlist:', data.title),
+            onClick: () => dispatch(playPlaylist(data.id)),
           },
           {
             id: 'edit',
@@ -215,6 +218,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdShare,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => sharePlaylistLink(data.id),
             separator: true,
           },
           {
