@@ -35,8 +35,8 @@ RUN npm install --omit=dev && \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Create uploads directory
-RUN mkdir -p /app/uploads
+# Create uploads directories
+RUN mkdir -p /app/uploads/songs /app/uploads/thumbnails
 
 # Expose port
 EXPOSE 3000
