@@ -124,7 +124,7 @@ export default function Sidebar() {
                   <div className="font-medium text-white">{pl.title}</div>
                   {/* <div className="mt-1 text-gray-500 dark:text-gray-400">{pl.artist}</div> */}
                   <div className={`text-sm ${selectedPlaylistId === pl.id ? 'text-gray-200' : 'text-gray-400'}`}>
-                    zehahaha
+                    {pl.description || 'Playlist'}
                   </div>
                 </div>
               </div>

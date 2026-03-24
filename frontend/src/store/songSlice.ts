@@ -22,12 +22,8 @@ export const fetchFilteredSongs = createAsyncThunk(
     let url = 'songs';
     if (type === 'artist' && value) url += `?artist=${encodeURIComponent(value)}`;
 
-    try {
-      const res = await api.get(url);
-      return res.data;
-    } catch (error) {
-      console.log("🚀 ~ error:", error);
-    }
+    const res = await api.get(url);
+    return res.data;
   }
 );
 
@@ -46,7 +42,7 @@ export const downloadSong = createAsyncThunk(
       link.click();
       link.remove();
     } catch (error) {
-      console.log("🚀 ~ error:", error);
+      // download error handled silently
     }
   }
 );

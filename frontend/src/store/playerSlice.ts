@@ -19,7 +19,7 @@ export const fetchPlaylists = createAsyncThunk('player/fetchPlaylists', async ()
     const res = await api.get('/playlists');
     return res.data;
   } catch (error) {
-    console.log("🚀 ~ error:", error)
+    return [];
   }
 });
 
@@ -30,8 +30,7 @@ export const fetchSelectedPlaylist = createAsyncThunk(
       const res = await api.get(`/playlists/${playlistId}`);
       return { playlistId, songs: res.data };
     } catch (error) {
-      console.log("🚀 ~ error:", error);
-      return error
+      return { playlistId, songs: { playlistSongs: [] } };
     }
   }
 );
@@ -50,7 +49,7 @@ export const addSongToPlaylist = createAsyncThunk(
         color: 'bg-green-500'
       });
     } catch (error) {
-      console.log("🚀 ~ error:", error)
+      snackbar.show({ message: 'Failed to add song', color: 'bg-red-500' });
     }
   }
 );
@@ -66,7 +65,7 @@ export const removeSongFromPlaylist = createAsyncThunk(
       }
       return { playlistId, songId };
     } catch (error) {
-      console.log("🚀 ~ error:", error);
+      snackbar.show({ message: 'Failed to remove song', color: 'bg-red-500' });
     }
   }
 );
@@ -75,7 +74,10 @@ export const playPlaylist = createAsyncThunk(
   'player/playPlaylist',
   async (playlistId: string, { dispatch }) => {
     const res = await api.get(`/playlists/${playlistId}`);
-    const songs = res.data.playlistSongs?.map((ps: any) => ps.song) ?? [];
+    const songs = res.data.playlistSongs?.map((ps: any) => ({
+      ...ps.song,
+      coverUrl: ps.song.coverImageUrl || ps.song.thumbnail,
+    })) ?? [];
     if (songs.length === 0) {
       snackbar.show({ message: 'Playlist is empty', color: 'bg-yellow-500' });
       return;

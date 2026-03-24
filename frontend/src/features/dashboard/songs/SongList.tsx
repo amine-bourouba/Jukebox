@@ -22,11 +22,10 @@ export default function SongList() {
 
 
   const handlePlaySong = (song: any) => {
-    dispatch(setTrack(song));
-  };
-
-  const handleMenuClick = (songId: string, event: React.MouseEvent) => {
-    // handled by context menu
+    dispatch(setTrack({
+      ...song,
+      coverUrl: song.coverImageUrl || song.thumbnail || song.coverUrl,
+    }));
   };
 
   if (selectedPlaylistId) {
@@ -84,7 +83,6 @@ export default function SongList() {
                     key={playlistSong.id}
                     playlistSong={playlistSong}
                     onPlay={handlePlaySong}
-                    onMenuClick={handleMenuClick}
                   />
                 ))}
               </tbody>
@@ -160,7 +158,6 @@ export default function SongList() {
                     },
                   }}
                   onPlay={handlePlaySong}
-                  onMenuClick={handleMenuClick}
                 />
               ))}
             </tbody>
