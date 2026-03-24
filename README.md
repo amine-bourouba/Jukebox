@@ -36,6 +36,7 @@ Add logging and monitoring (e.g., request logs, error logs).
 - Save user's last played song
 - List the last 10 things a user listnend to (artists or playlists)
 - Deep link support: open and play a song or playlist from a shared URL (e.g. `/songs/:id`, `/playlists/:id`)
+- Password reset/change endpoint
 
 ## MAYBE ????
 - Add a podcast section
