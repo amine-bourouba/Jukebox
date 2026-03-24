@@ -94,9 +94,8 @@ export default function SongList() {
   }
 
   // Filtered / All Songs view
-  const heading = filter.type === 'artist' && filter.value
-    ? `Songs by ${filter.value}`
-    : 'All Songs';
+  const isArtistView = filter.type === 'artist' && filter.value;
+  const heading = isArtistView ? filter.value : 'All Songs';
 
   return (
     <div className="flex flex-col h-full overflow-hidden pt-8">
@@ -109,7 +108,9 @@ export default function SongList() {
             <div className="flex flex-col justify-between">
               <div/>
               <div>
-                <p className="text-sm font-bold text-white">Library</p>
+                {isArtistView ? null : (
+                  <p className="text-sm font-bold text-white">Library</p>
+                )}
                 <p className="mt-1 text-5xl font-extrabold text-white">
                   {heading}
                 </p>
