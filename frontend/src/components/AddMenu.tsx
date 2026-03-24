@@ -43,7 +43,7 @@ export default function AddMenu() {
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="w-8 h-8 flex items-center justify-center rounded-full bg-amethyst hover:bg-amethyst/80 text-white text-lg font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amethyst/50"
+        className="w-8 h-8 flex justify-center rounded-full bg-amethyst hover:bg-amethyst/80 text-white text-lg font-bold transition-colors focus:outline-none focus:ring-2 focus:ring-amethyst/50"
         aria-label="Add new"
       >
         +
