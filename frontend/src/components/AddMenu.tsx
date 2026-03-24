@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useUploadSong } from './UploadSongModal';
+import { usePlaylistModal } from './PlaylistModal';
 
 const menuItems = [
   { id: 'upload-song', label: 'Upload Song', icon: '🎵' },
@@ -12,6 +13,7 @@ export default function AddMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { showUploadSong } = useUploadSong();
+  const { showCreatePlaylist } = usePlaylistModal();
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -33,11 +35,10 @@ export default function AddMenu() {
         showUploadSong();
         break;
       case 'create-playlist':
-        // TODO: wire create playlist
-        console.log('Create Playlist');
+        showCreatePlaylist();
         break;
     }
-  }, [showUploadSong]);
+  }, [showUploadSong, showCreatePlaylist]);
 
   return (
     <div ref={menuRef} className="relative">

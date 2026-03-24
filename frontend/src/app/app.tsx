@@ -6,6 +6,7 @@ import { SnackbarProvider } from '../components/SnackbarProvider';
 import { ConfirmationModalProvider } from '../components/ConfirmationModal';
 import { EditSongModalProvider } from '../components/EditSongModal';
 import { UploadSongModalProvider } from '../components/UploadSongModal';
+import { PlaylistModalProvider } from '../components/PlaylistModal';
 
 import LoginForm from '../features/auth/LoginForm';
 import RegisterForm from '../features/auth/RegisterForm';
@@ -19,7 +20,8 @@ export default function App() {
       <ConfirmationModalProvider>
         <EditSongModalProvider>
           <UploadSongModalProvider>
-            <ContextMenuProvider>
+            <PlaylistModalProvider>
+              <ContextMenuProvider>
             <Routes>
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
@@ -31,6 +33,7 @@ export default function App() {
             
               <ContextMenu />
             </ContextMenuProvider>
+            </PlaylistModalProvider>
           </UploadSongModalProvider>
         </EditSongModalProvider>
       </ConfirmationModalProvider>

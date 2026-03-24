@@ -5,6 +5,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PlaylistsService } from './playlists.service';
 import { CreatePlaylistDto } from './dto/create-playlist.dto';
+import { UpdatePlaylistDto } from './dto/update-playlist.dto';
 
 @Controller('playlists')
 export class PlaylistsController {
@@ -40,6 +41,14 @@ export class PlaylistsController {
     const deleted = await this.playlistsService.deletePlaylist(req.user.userId, id);
     if (!deleted) throw new NotFoundException('Playlist not found or unauthorized');
     return { message: 'Playlist deleted' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async updatePlaylist(@Req() req: any, @Param('id') id: string, @Body() dto: UpdatePlaylistDto) {
+    const updated = await this.playlistsService.updatePlaylist(req.user.userId, id, dto);
+    if (!updated) throw new NotFoundException('Playlist not found or unauthorized');
+    return updated;
   }
 
   @UseGuards(JwtAuthGuard)

@@ -99,6 +99,34 @@ export const deletePlaylist = createAsyncThunk(
   }
 );
 
+export const createPlaylist = createAsyncThunk(
+  'player/createPlaylist',
+  async (data: { title: string; description?: string }, { dispatch, rejectWithValue }) => {
+    try {
+      const res = await api.post('/playlists', data);
+      snackbar.show({ message: 'Playlist created', color: 'bg-green-500' });
+      dispatch(fetchPlaylists());
+      return res.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create playlist');
+    }
+  }
+);
+
+export const updatePlaylist = createAsyncThunk(
+  'player/updatePlaylist',
+  async ({ playlistId, data }: { playlistId: string; data: { title?: string; description?: string } }, { dispatch, rejectWithValue }) => {
+    try {
+      const res = await api.put(`/playlists/${playlistId}`, data);
+      snackbar.show({ message: 'Playlist updated', color: 'bg-green-500' });
+      dispatch(fetchPlaylists());
+      return res.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update playlist');
+    }
+  }
+);
+
 const playerSlice = createSlice({
   name: 'player',
   initialState,

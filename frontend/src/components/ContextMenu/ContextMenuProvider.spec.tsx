@@ -33,6 +33,12 @@ vi.mock('../EditSongModal', () => ({
   EditSongModalProvider: ({ children }: any) => children,
 }));
 
+const mockShowCreatePlaylist = vi.fn();
+const mockShowEditPlaylist = vi.fn();
+vi.mock('../PlaylistModal', () => ({
+  usePlaylistModal: () => ({ showCreatePlaylist: mockShowCreatePlaylist, showEditPlaylist: mockShowEditPlaylist }),
+}));
+
 function createStore(playlists: any[] = [], likedSongIds: string[] = []) {
   return configureStore({
     reducer: { player: playerReducer, songs: songReducer },

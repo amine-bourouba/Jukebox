@@ -2,9 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 const mockShowUploadSong = vi.fn();
+const mockShowCreatePlaylist = vi.fn();
 
 vi.mock('./UploadSongModal', () => ({
   useUploadSong: () => ({ showUploadSong: mockShowUploadSong }),
+}));
+
+vi.mock('./PlaylistModal', () => ({
+  usePlaylistModal: () => ({ showCreatePlaylist: mockShowCreatePlaylist, showEditPlaylist: vi.fn() }),
 }));
 
 import AddMenu from './AddMenu';
@@ -63,5 +68,13 @@ describe('AddMenu', () => {
 
     fireEvent.mouseDown(document.body);
     expect(screen.queryByText('Upload Song')).not.toBeInTheDocument();
+  });
+
+  it('should call showCreatePlaylist when Create Playlist is clicked', () => {
+    render(<AddMenu />);
+    fireEvent.click(screen.getByLabelText('Add new'));
+    fireEvent.click(screen.getByText('Create Playlist'));
+
+    expect(mockShowCreatePlaylist).toHaveBeenCalledOnce();
   });
 });

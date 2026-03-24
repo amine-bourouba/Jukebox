@@ -21,6 +21,7 @@ import { addSongToPlaylist, removeSongFromPlaylist, addToQueue, playPlaylist, de
 import { downloadSong, deleteSong, likeSong, unlikeSong } from '../../store/songSlice';
 import { shareSongLink, sharePlaylistLink } from '../../services/share';
 import { useEditSong } from '../EditSongModal';
+import { usePlaylistModal } from '../PlaylistModal';
 
 
 interface ContextMenuContextType {
@@ -113,6 +114,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
   const userPlaylists = useSelector((state: RootState) => state.player.playlists);
   const likedSongIds = useSelector((state: RootState) => state.songs.likedSongIds);
   const { showEditSong } = useEditSong();
+  const { showCreatePlaylist, showEditPlaylist } = usePlaylistModal();
 
   const getMenuItems = useCallback((triggerType: string, data: any): ContextMenuItem[] => {
     
@@ -125,7 +127,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdFolder,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
-            onClick: () => console.log('Create new playlist for:', data.song?.title),
+            onClick: () => showCreatePlaylist(),
           },
           { id: 'separator', label: '', separator: true },
           ...userPlaylists!.map((playlist: any) => ({
@@ -223,7 +225,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdEdit,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
-            onClick: () => console.log('Edit playlist:', data.title),
+            onClick: () => showEditPlaylist(data),
           },
           {
             id: 'share',
@@ -247,7 +249,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
       default:
         return [];
     }
-  }, [userPlaylists, likedSongIds, dispatch, showEditSong]);
+  }, [userPlaylists, likedSongIds, dispatch, showEditSong, showCreatePlaylist, showEditPlaylist]);
 
   const showMenu = useCallback((
     x: number, 
