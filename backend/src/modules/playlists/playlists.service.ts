@@ -49,6 +49,7 @@ export class PlaylistsService {
   async deletePlaylist(userId: string, id: string) {
     const playlist = await this.prisma.playlist.findFirst({ where: { id, ownerId: userId } });
     if (!playlist) return null;
+    await this.prisma.playlistSong.deleteMany({ where: { playlistId: id } });
     await this.prisma.playlist.delete({ where: { id } });
     return true;
   }

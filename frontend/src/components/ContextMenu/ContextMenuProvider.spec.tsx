@@ -3,14 +3,15 @@ import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from '../../store/playerSlice';
+import songReducer from '../../store/songSlice';
 import { ContextMenuProvider, useContextMenu as useContextMenuFromProvider } from './ContextMenuProvider';
 
 // Mock api
-const mockApiGet = vi.fn().mockResolvedValue({ data: [] });
 vi.mock('../../services/api', () => ({
   default: {
-    get: mockApiGet,
+    get: vi.fn().mockResolvedValue({ data: [] }),
     post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
     delete: vi.fn().mockResolvedValue({ data: {} }),
   },
 }));
@@ -26,9 +27,15 @@ vi.mock('../../services/share', () => ({
   sharePlaylistLink: (...args: any[]) => mockSharePlaylistLink(...args),
 }));
 
-function createStore(playlists: any[] = []) {
+const mockShowEditSong = vi.fn();
+vi.mock('../EditSongModal', () => ({
+  useEditSong: () => ({ showEditSong: mockShowEditSong }),
+  EditSongModalProvider: ({ children }: any) => children,
+}));
+
+function createStore(playlists: any[] = [], likedSongIds: string[] = []) {
   return configureStore({
-    reducer: { player: playerReducer },
+    reducer: { player: playerReducer, songs: songReducer },
     preloadedState: {
       player: {
         currentTrack: null,
@@ -39,12 +46,18 @@ function createStore(playlists: any[] = []) {
         selectedPlaylistId: null,
         selectedPlaylist: null,
       },
+      songs: {
+        filterOptions: { artist: [], genre: [] },
+        filter: { type: 'all', value: '' },
+        songs: [],
+        likedSongIds,
+      },
     },
   });
 }
 
-function createWrapper(playlists: any[] = []) {
-  const store = createStore(playlists);
+function createWrapper(playlists: any[] = [], likedSongIds: string[] = []) {
+  const store = createStore(playlists, likedSongIds);
   return ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
       <ContextMenuProvider>{children}</ContextMenuProvider>
@@ -270,5 +283,73 @@ describe('ContextMenuProvider', () => {
     });
 
     expect(mockSharePlaylistLink).toHaveBeenCalledWith('p1');
+  });
+
+  it('should show "Like Song" for unliked songs', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper([], []),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Song' },
+    });
+
+    const likeItem = items.find((i: any) => i.id === 'like');
+    expect(likeItem).toBeDefined();
+    expect(likeItem!.label).toBe('Like Song');
+  });
+
+  it('should show "Unlike Song" for liked songs', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper([], ['s1']),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Song' },
+    });
+
+    const likeItem = items.find((i: any) => i.id === 'like');
+    expect(likeItem).toBeDefined();
+    expect(likeItem!.label).toBe('Unlike Song');
+  });
+
+  it('edit details menu item should call showEditSong', () => {
+    const song = { id: 's1', title: 'Test Song', artist: 'Artist' };
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', { song });
+    const editItem = items.find((i: any) => i.id === 'edit');
+    act(() => {
+      editItem!.onClick!();
+    });
+
+    expect(mockShowEditSong).toHaveBeenCalledWith(song);
+  });
+
+  it('delete playlist menu item should exist in sidebar-playlist menu', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('sidebar-playlist', { id: 'p1', title: 'Test' });
+    const deleteItem = items.find((i: any) => i.id === 'delete');
+    expect(deleteItem).toBeDefined();
+    expect(deleteItem!.label).toBe('Delete Playlist');
+    expect(deleteItem!.onClick).toBeInstanceOf(Function);
+  });
+
+  it('playlist-song menu should include like item', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Test' },
+    });
+
+    const ids = items.map((i: any) => i.id);
+    expect(ids).toContain('like');
   });
 });

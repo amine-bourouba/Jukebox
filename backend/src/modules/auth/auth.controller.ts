@@ -19,6 +19,7 @@ export class AuthController {
   async login(@Body() body: { email: string; password: string }) {
     try {
       const user = await this.authService.validateUser(body.email, body.password);
+      console.log("🚀 ~ AuthController ~ login ~ email:", body)
       return this.authService.login(user);
     } catch (error: any) {
       throw new UnauthorizedException(error.message);

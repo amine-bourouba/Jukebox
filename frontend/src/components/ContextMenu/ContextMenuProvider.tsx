@@ -11,14 +11,16 @@ import {
   MdFolder,
   MdDownload,
   MdOutlineCancel,
+  MdFavorite,
+  MdFavoriteBorder,
 } from 'react-icons/md';
 
 import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
-import { RootState } from '../../store/store';
-import { addSongToPlaylist, removeSongFromPlaylist, addToQueue, playPlaylist } from "../../store/playerSlice";
-import { downloadSong, deleteSong } from '../../store/songSlice';
-import { snackbar } from '../../services/snackbar';
+import { RootState, AppDispatch } from '../../store/store';
+import { addSongToPlaylist, removeSongFromPlaylist, addToQueue, playPlaylist, deletePlaylist } from "../../store/playerSlice";
+import { downloadSong, deleteSong, likeSong, unlikeSong } from '../../store/songSlice';
 import { shareSongLink, sharePlaylistLink } from '../../services/share';
+import { useEditSong } from '../EditSongModal';
 
 
 interface ContextMenuContextType {
@@ -106,12 +108,13 @@ interface ContextMenuProviderProps {
 }
 
 export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [state, dispatchContext] = useReducer(contextMenuReducer, initialState);
   const userPlaylists = useSelector((state: RootState) => state.player.playlists);
+  const likedSongIds = useSelector((state: RootState) => state.songs.likedSongIds);
+  const { showEditSong } = useEditSong();
 
   const getMenuItems = useCallback((triggerType: string, data: any): ContextMenuItem[] => {
-    console.log("🚀 ~ ContextMenuProvider ~ data:", data)
     
     switch (triggerType) {
       case 'playlist-song':
@@ -169,12 +172,22 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             onClick: () => shareSongLink(data.song?.id),
           },
           {
+            id: 'like',
+            label: likedSongIds.includes(data.song?.id) ? 'Unlike Song' : 'Like Song',
+            icon: likedSongIds.includes(data.song?.id) ? MdFavorite : MdFavoriteBorder,
+            color: likedSongIds.includes(data.song?.id) ? 'text-red-400' : 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => likedSongIds.includes(data.song?.id)
+              ? dispatch(unlikeSong(data.song?.id))
+              : dispatch(likeSong(data.song?.id)),
+          },
+          {
             id: 'edit',
             label: 'Edit Details',
             icon: MdEdit,
             color: 'text-white',
             hoverColor: 'hover:bg-amethyst/20',
-            onClick: () => console.log('Edit song:', data.song?.title),
+            onClick: () => showEditSong(data.song),
           },
           {
             id: 'download',
@@ -227,14 +240,14 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdDelete,
             color: 'text-red-400',
             hoverColor: 'hover:bg-red-500/10',
-            onClick: () => console.log('Delete playlist:', data.title),
+            onClick: () => dispatch(deletePlaylist(data.id)),
           },
         ];
 
       default:
         return [];
     }
-  }, [userPlaylists]);
+  }, [userPlaylists, likedSongIds, dispatch, showEditSong]);
 
   const showMenu = useCallback((
     x: number, 

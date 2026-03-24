@@ -8,8 +8,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
-    "module": "commonjs",
-    "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": false

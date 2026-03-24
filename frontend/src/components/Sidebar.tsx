@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TbPlaylist } from "react-icons/tb";
 
 import { fetchPlaylists } from '../store/playerSlice';
-import { setSongFilter, fetchFilterOptions } from '../store/songSlice';
+import { setSongFilter, fetchFilterOptions, fetchLikedSongs } from '../store/songSlice';
 import { fetchSelectedPlaylist, setSelectedPlaylist } from '../store/playerSlice';
 import { RootState } from '../store/store';
 import { useContextMenu } from './ContextMenu/useContextMenu';
@@ -27,6 +27,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     dispatch(fetchPlaylists());
+    dispatch(fetchLikedSongs());
     dispatch(fetchFilterOptions(selectedPill));
   }, [dispatch, selectedPill]);
 

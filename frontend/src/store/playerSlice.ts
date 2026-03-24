@@ -85,6 +85,20 @@ export const playPlaylist = createAsyncThunk(
   }
 );
 
+export const deletePlaylist = createAsyncThunk(
+  'player/deletePlaylist',
+  async (playlistId: string, { dispatch, rejectWithValue }) => {
+    try {
+      await api.delete(`/playlists/${playlistId}`);
+      snackbar.show({ message: 'Playlist deleted', color: 'bg-green-500' });
+      dispatch(fetchPlaylists());
+      return playlistId;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete playlist');
+    }
+  }
+);
+
 const playerSlice = createSlice({
   name: 'player',
   initialState,
@@ -143,6 +157,12 @@ const playerSlice = createSlice({
         //   }
         // }
         //TODO: Double check the work logic above
+      })
+      .addCase(deletePlaylist.fulfilled, (state, action) => {
+        if (state.selectedPlaylistId === action.payload) {
+          state.selectedPlaylistId = null;
+          state.selectedPlaylist = null;
+        }
       });
   }
 });

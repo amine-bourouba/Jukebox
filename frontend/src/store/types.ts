@@ -5,6 +5,7 @@ export interface SongState {
   filterOptions: Record<FilterType, any[]>;
   filter: { type: string; value: string };
   songs: any[];
+  likedSongIds: string[];
 }
 
 // Player types

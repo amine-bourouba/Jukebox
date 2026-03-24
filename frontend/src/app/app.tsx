@@ -4,6 +4,8 @@ import { ContextMenuProvider } from '../components/ContextMenu/ContextMenuProvid
 import ContextMenu from '../components/ContextMenu/ContextMenu';
 import { SnackbarProvider } from '../components/SnackbarProvider';
 import { ConfirmationModalProvider } from '../components/ConfirmationModal';
+import { EditSongModalProvider } from '../components/EditSongModal';
+import { UploadSongModalProvider } from '../components/UploadSongModal';
 
 import LoginForm from '../features/auth/LoginForm';
 import RegisterForm from '../features/auth/RegisterForm';
@@ -15,7 +17,9 @@ export default function App() {
   return (
     <SnackbarProvider>
       <ConfirmationModalProvider>
-        <ContextMenuProvider>
+        <EditSongModalProvider>
+          <UploadSongModalProvider>
+            <ContextMenuProvider>
             <Routes>
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
@@ -25,8 +29,10 @@ export default function App() {
               </Route>
             </Routes>
             
-            <ContextMenu />
-        </ContextMenuProvider>
+              <ContextMenu />
+            </ContextMenuProvider>
+          </UploadSongModalProvider>
+        </EditSongModalProvider>
       </ConfirmationModalProvider>
     </SnackbarProvider>
   );

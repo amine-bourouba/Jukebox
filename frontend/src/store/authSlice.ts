@@ -19,6 +19,7 @@ export const login = createAsyncThunk(
         }
       };
     } catch (error: any) {
+      console.log("🚀 ~ error:", error)
       return thunkAPI.rejectWithValue(error.response?.data?.message || 'Login failed');
     }
   }

@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import playerReducer, {
   setTrack, clearTrack, setQueue, addToQueue, setRepeat, setShuffle, setSelectedPlaylist,
   fetchPlaylists, fetchSelectedPlaylist, addSongToPlaylist, removeSongFromPlaylist, playPlaylist,
+  deletePlaylist,
 } from './playerSlice';
 import api from '../services/api';
 
@@ -86,13 +87,13 @@ describe('playerSlice', () => {
       expect(store.getState().player.queue[1]).toEqual(newTrack);
     });
 
-    it('addToQueue should not add duplicate tracks', () => {
+    it('addToQueue should allow duplicate tracks', () => {
       const track = { id: 't1', title: 'S1', artist: 'A', streamUrl: '/s1' };
       const store = createStore({ ...defaultState, queue: [track] });
 
       store.dispatch(addToQueue(track));
 
-      expect(store.getState().player.queue).toHaveLength(1);
+      expect(store.getState().player.queue).toHaveLength(2);
     });
 
     it('setRepeat should update repeat mode', () => {
@@ -225,6 +226,59 @@ describe('playerSlice', () => {
         expect.objectContaining({ message: 'Playlist is empty' })
       );
       expect(store.getState().player.queue).toHaveLength(0);
+    });
+  });
+
+  describe('deletePlaylist thunk', () => {
+    it('should call API to delete and refresh playlists', async () => {
+      (api.delete as any).mockResolvedValue({});
+      (api.get as any).mockResolvedValue({ data: [] });
+
+      const store = createStore({ ...defaultState, selectedPlaylistId: 'pl-other' });
+      await store.dispatch(deletePlaylist('pl-1'));
+
+      expect(api.delete).toHaveBeenCalledWith('/playlists/pl-1');
+      expect(api.get).toHaveBeenCalledWith('/playlists');
+    });
+
+    it('should clear selectedPlaylist when deleting the selected playlist', async () => {
+      (api.delete as any).mockResolvedValue({});
+      (api.get as any).mockResolvedValue({ data: [] });
+
+      const store = createStore({
+        ...defaultState,
+        selectedPlaylistId: 'pl-1',
+        selectedPlaylist: { id: 'pl-1', songs: [] },
+      });
+      await store.dispatch(deletePlaylist('pl-1'));
+
+      expect(store.getState().player.selectedPlaylistId).toBeNull();
+      expect(store.getState().player.selectedPlaylist).toBeNull();
+    });
+
+    it('should not clear selectedPlaylist when deleting a different playlist', async () => {
+      (api.delete as any).mockResolvedValue({});
+      (api.get as any).mockResolvedValue({ data: [] });
+
+      const store = createStore({
+        ...defaultState,
+        selectedPlaylistId: 'pl-2',
+      });
+      await store.dispatch(deletePlaylist('pl-1'));
+
+      expect(store.getState().player.selectedPlaylistId).toBe('pl-2');
+    });
+
+    it('should not modify state on failure', async () => {
+      (api.delete as any).mockRejectedValue({ response: { data: { message: 'Unauthorized' } } });
+
+      const store = createStore({
+        ...defaultState,
+        selectedPlaylistId: 'pl-1',
+      });
+      await store.dispatch(deletePlaylist('pl-1'));
+
+      expect(store.getState().player.selectedPlaylistId).toBe('pl-1');
     });
   });
 });

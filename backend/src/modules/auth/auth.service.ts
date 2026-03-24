@@ -20,21 +20,30 @@ export class AuthService {
     const hashed = await bcrypt.hash(password, 10);
     const refreshToken = randomBytes(32).toString('hex');
     // Save user to DB
-    const user = await this.prisma.user.create({
-      data: { email, password: hashed, displayName, refreshToken },
-    });
-    // Exclude password from response
-    const { password: _, ...userWithoutPassword } = user;
-    return {
-      ...userWithoutPassword,
-      ...this.issueTokens(user.id, user.email, refreshToken)
-    };
+    try {
+      const user = await this.prisma.user.create({
+        data: { email, password: hashed, displayName, refreshToken },
+      });
+      // Exclude password from response
+      const { password: _, ...userWithoutPassword } = user;
+      return {
+        ...userWithoutPassword,
+        ...this.issueTokens(user.id, user.email, refreshToken)
+      };
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        throw new BadRequestException('A user with this email already exists');
+      }
+      throw error;
+    }
   }
 
   async validateUser(email: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
+    console.log("🚀 ~ AuthService ~ validateUser ~ user:", user)
     if (!user) throw new UnauthorizedException('Invalid credentials');
     const isValid = await bcrypt.compare(password, user.password);
+    console.log("🚀 ~ AuthService ~ validateUser ~ isValid:", isValid)
     if (!isValid) throw new UnauthorizedException('Invalid credentials');
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
