@@ -155,8 +155,9 @@ describe('UploadSongModal', () => {
     const file = new File(['audio'], 'song.mp3', { type: 'audio/mpeg' });
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    // Fill in optional fields
-    fireEvent.change(screen.getByPlaceholderText('Leave blank for auto-detection'), {
+    // Fill in title field
+    const titleInput = screen.getByLabelText('Title (optional — auto-detected)');
+    fireEvent.change(titleInput, {
       target: { value: 'My Song' },
     });
 

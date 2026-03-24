@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from '../../store/playerSlice';
+import songReducer from '../../store/songSlice';
 import { ContextMenuProvider } from './ContextMenuProvider';
 import ContextMenu from './ContextMenu';
 
@@ -15,9 +16,13 @@ vi.mock('../../services/api', () => ({
   },
 }));
 
+vi.mock('../EditSongModal', () => ({
+  useEditSong: () => ({ showEditSong: vi.fn() }),
+}));
+
 function createStore(playlists: any[] = []) {
   return configureStore({
-    reducer: { player: playerReducer },
+    reducer: { player: playerReducer, songs: songReducer },
     preloadedState: {
       player: {
         currentTrack: null,
@@ -27,6 +32,12 @@ function createStore(playlists: any[] = []) {
         playlists,
         selectedPlaylistId: null,
         selectedPlaylist: null,
+      },
+      songs: {
+        filterOptions: { artist: [], genre: [] },
+        filter: { type: 'all', value: '' },
+        songs: [],
+        likedSongIds: [],
       },
     },
   });

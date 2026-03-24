@@ -113,8 +113,9 @@ export function UploadSongModalProvider({ children }: { children: React.ReactNod
 
               {/* Title hint */}
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Title (optional — auto-detected)</label>
+                <label htmlFor="upload-title" className="block text-sm text-gray-300 mb-1">Title (optional — auto-detected)</label>
                 <input
+                  id="upload-title"
                   type="text"
                   value={fields.title}
                   onChange={e => handleFieldChange('title', e.target.value)}
@@ -125,8 +126,9 @@ export function UploadSongModalProvider({ children }: { children: React.ReactNod
 
               {/* Artist hint */}
               <div>
-                <label className="block text-sm text-gray-300 mb-1">Artist (optional — auto-detected)</label>
+                <label htmlFor="upload-artist" className="block text-sm text-gray-300 mb-1">Artist (optional — auto-detected)</label>
                 <input
+                  id="upload-artist"
                   type="text"
                   value={fields.artist}
                   onChange={e => handleFieldChange('artist', e.target.value)}
