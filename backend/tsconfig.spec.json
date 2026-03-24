@@ -2,6 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/jest",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "types": ["jest", "node"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
