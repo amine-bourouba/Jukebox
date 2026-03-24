@@ -183,6 +183,18 @@ export class SongsController {
   }
 
     @UseGuards(JwtAuthGuard)
+    @Get()
+    async getSongs(@Req() req: any, @Query('artist') artist?: string) {
+      return this.songsService.getAllSongs(req.user.userId, artist);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('artists')
+    async getArtists(@Req() req: any) {
+      return this.songsService.getDistinctArtists(req.user.userId);
+    }
+
+    @UseGuards(JwtAuthGuard)
     @Get('search')
     async searchSongs(@Req() req: any, @Body() body: any) {
     try {

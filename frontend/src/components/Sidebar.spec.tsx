@@ -60,9 +60,9 @@ describe('Sidebar', () => {
 
   it('should render filter pills', () => {
     renderSidebar();
+    expect(screen.getByText('Songs')).toBeInTheDocument();
     expect(screen.getByText('Playlist')).toBeInTheDocument();
     expect(screen.getByText('Artist')).toBeInTheDocument();
-    expect(screen.getByText('Genre')).toBeInTheDocument();
   });
 
   it('should render "Your Playlists" section', () => {

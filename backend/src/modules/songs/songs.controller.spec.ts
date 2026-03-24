@@ -21,6 +21,8 @@ describe('SongsController', () => {
       likeSong: vi.fn(),
       unlikeSong: vi.fn(),
       createSongWithUpload: vi.fn(),
+      getAllSongs: vi.fn(),
+      getDistinctArtists: vi.fn(),
     };
 
     const musicBrainzService = {
@@ -187,6 +189,38 @@ describe('SongsController', () => {
 
       expect(songsService.unlikeSong).toHaveBeenCalledWith('user-1', 'song-1');
       expect(result).toEqual({ message: 'Song unliked' });
+    });
+  });
+
+  describe('getSongs', () => {
+    it('should return all songs for user', async () => {
+      const songs = [{ id: 's1', title: 'Song A' }];
+      songsService.getAllSongs.mockResolvedValue(songs);
+
+      const result = await controller.getSongs(mockReq());
+
+      expect(songsService.getAllSongs).toHaveBeenCalledWith('user-1', undefined);
+      expect(result).toEqual(songs);
+    });
+
+    it('should pass artist filter to service', async () => {
+      songsService.getAllSongs.mockResolvedValue([]);
+
+      await controller.getSongs(mockReq(), 'Drake');
+
+      expect(songsService.getAllSongs).toHaveBeenCalledWith('user-1', 'Drake');
+    });
+  });
+
+  describe('getArtists', () => {
+    it('should return distinct artists', async () => {
+      const artists = ['Adele', 'Drake'];
+      songsService.getDistinctArtists.mockResolvedValue(artists);
+
+      const result = await controller.getArtists(mockReq());
+
+      expect(songsService.getDistinctArtists).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual(artists);
     });
   });
 });

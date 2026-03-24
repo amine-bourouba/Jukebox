@@ -46,7 +46,7 @@ function createStore(playerOverrides: any = {}) {
         ...playerOverrides,
       },
       songs: {
-        filterOptions: {},
+        filterOptions: { artist: [] },
         filter: { type: 'all', value: '' },
         songs: [],
       },
@@ -59,13 +59,14 @@ describe('SongList', () => {
     vi.clearAllMocks();
   });
 
-  it('should render null when no playlist is selected', () => {
+  it('should render All Songs view when no playlist is selected', () => {
     const { container } = render(
       <Provider store={createStore()}>
         <SongList />
       </Provider>
     );
-    expect(container.innerHTML).toBe('');
+    expect(screen.getByText('All Songs')).toBeInTheDocument();
+    expect(screen.getByText('Library')).toBeInTheDocument();
   });
 
   it('should render playlist header when a playlist is selected', () => {

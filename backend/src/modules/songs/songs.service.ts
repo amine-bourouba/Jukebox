@@ -90,6 +90,25 @@ export class SongsService {
     return this.prisma.song.count({ where: filters });
   }
 
+  async getAllSongs(userId: string, artist?: string) {
+    const where: any = { ownerId: userId };
+    if (artist) where.artist = { equals: artist, mode: 'insensitive' };
+    return this.prisma.song.findMany({
+      where,
+      orderBy: { title: 'asc' },
+    });
+  }
+
+  async getDistinctArtists(userId: string) {
+    const songs = await this.prisma.song.findMany({
+      where: { ownerId: userId },
+      select: { artist: true },
+      distinct: ['artist'],
+      orderBy: { artist: 'asc' },
+    });
+    return songs.map(s => s.artist).filter(Boolean);
+  }
+
   async likeSong(userId: string, songId: string) {
     // Prevent duplicate likes
     const existing = await this.prisma.songLike.findUnique({

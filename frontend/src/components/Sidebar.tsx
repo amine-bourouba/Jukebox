@@ -10,9 +10,9 @@ import { RootState } from '../store/store';
 import { useContextMenu } from './ContextMenu/useContextMenu';
 
 const pills = [
+  { label: 'Songs', value: 'all' },
   { label: 'Playlist', value: 'playlist' },
   { label: 'Artist', value: 'artist' },
-  { label: 'Genre', value: 'genre' },
 ];
 
 export default function Sidebar() {
@@ -20,7 +20,7 @@ export default function Sidebar() {
   const playlists = useSelector((state: RootState) => state.player.playlists);
   const selectedPlaylistId = useSelector((state: RootState) => state.player.selectedPlaylistId);
   const filterOptions = useSelector((state: RootState) => state.songs.filterOptions);
-  const [selectedPill, setSelectedPill] = useState('all');
+  const [selectedPill, setSelectedPill] = useState('playlist');
   const [selectedOption, setSelectedOption] = useState('');
 
   const { showContextMenu } = useContextMenu();
@@ -28,13 +28,21 @@ export default function Sidebar() {
   useEffect(() => {
     dispatch(fetchPlaylists());
     dispatch(fetchLikedSongs());
-    dispatch(fetchFilterOptions(selectedPill));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (selectedPill === 'artist') {
+      dispatch(fetchFilterOptions(selectedPill));
+    }
   }, [dispatch, selectedPill]);
 
   // Handle pill selection
   const handlePillClick = (pill: string) => {
     setSelectedPill(pill);
     setSelectedOption('');
+    if (pill !== 'playlist') {
+      dispatch(setSelectedPlaylist(null));
+    }
     dispatch(setSongFilter({ type: pill, value: '' }));
   };
 
@@ -73,7 +81,7 @@ export default function Sidebar() {
       {/* TODO: Implement generic listing component to handle remaing filtering results */}
 
       {/* Filter options (artist/genre) */}
-      {selectedPill !== 'all' && (
+      {selectedPill === 'artist' && (
         <div className="mb-6">
           <div className="text-silver mb-2 text-xs uppercase">{selectedPill}s</div>
           <div className="flex flex-col gap-1">

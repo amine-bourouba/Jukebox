@@ -17,6 +17,7 @@ describe('PlaylistsController', () => {
       addSongToPlaylist: vi.fn(),
       removeSongFromPlaylist: vi.fn(),
       reorderPlaylist: vi.fn(),
+      updatePlaylist: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -141,6 +142,25 @@ describe('PlaylistsController', () => {
 
       expect(playlistsService.reorderPlaylist).toHaveBeenCalledWith('user-1', 'pl-1', ['s2', 's1']);
       expect(result).toEqual({ message: 'Playlist reordered' });
+    });
+  });
+
+  describe('updatePlaylist', () => {
+    it('should update a playlist', async () => {
+      const updated = { id: 'pl-1', title: 'Updated', ownerId: 'user-1' };
+      playlistsService.updatePlaylist.mockResolvedValue(updated);
+
+      const result = await controller.updatePlaylist(mockReq(), 'pl-1', { title: 'Updated' });
+
+      expect(playlistsService.updatePlaylist).toHaveBeenCalledWith('user-1', 'pl-1', { title: 'Updated' });
+      expect(result).toEqual(updated);
+    });
+
+    it('should throw NotFoundException if playlist not found', async () => {
+      playlistsService.updatePlaylist.mockResolvedValue(null);
+
+      await expect(controller.updatePlaylist(mockReq(), 'pl-1', { title: 'X' }))
+        .rejects.toThrow(NotFoundException);
     });
   });
 });

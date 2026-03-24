@@ -20,7 +20,7 @@ export const fetchFilteredSongs = createAsyncThunk(
   'songs/fetchFilteredSongs',
   async ({ type, value }: { type: string; value: string }) => {
     let url = 'songs';
-    if (type !== 'all' && value) url += `?${type}=${encodeURIComponent(value)}`;
+    if (type === 'artist' && value) url += `?artist=${encodeURIComponent(value)}`;
 
     try {
       const res = await api.get(url);
@@ -61,7 +61,6 @@ export const deleteSong = createAsyncThunk(
         dispatch(fetchSelectedPlaylist(state.player.selectedPlaylistId));
       }
       dispatch(fetchFilterOptions('artist'));
-      dispatch(fetchFilterOptions('genre'));
       return songId;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete song');
@@ -112,7 +111,6 @@ export const uploadSong = createAsyncThunk(
       });
       snackbar.show({ message: 'Song uploaded successfully', color: 'bg-green-500' });
       dispatch(fetchFilterOptions('artist'));
-      dispatch(fetchFilterOptions('genre'));
       return res.data;
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Failed to upload song';
@@ -141,7 +139,7 @@ export const updateSong = createAsyncThunk(
 );
 
 const initialState: SongState = {
-  filterOptions: { artist: [], genre: [] },
+  filterOptions: { artist: [] },
   filter: { type: 'all', value: '' },
   songs: [],
   likedSongIds: [],
@@ -159,13 +157,12 @@ const songSlice = createSlice({
     builder
       .addCase(fetchFilterOptions.fulfilled, (state, action) => {
         const type = action.payload.type as FilterType;
-        if (type === 'artist' || type === 'genre') {
+        if (type === 'artist') {
           state.filterOptions[type] = action.payload.options;
         }
       })
       .addCase(fetchFilteredSongs.fulfilled, (state, action) => {
-        if (action.payload &&action.payload.status !== 404) {
-          console.log("🚀 ~ action.payload:", action.payload)
+        if (action.payload && action.payload.status !== 404) {
           state.songs = action.payload.sort((a: any, b: any) => a.title.localeCompare(b.title));
         }
       })

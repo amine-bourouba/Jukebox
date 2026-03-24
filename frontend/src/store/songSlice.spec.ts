@@ -41,7 +41,7 @@ const defaultPlayerState = {
 };
 
 const defaultState = {
-  filterOptions: { artist: [], genre: [] },
+  filterOptions: { artist: [] },
   filter: { type: 'all', value: '' },
   songs: [],
   likedSongIds: [],
@@ -73,17 +73,6 @@ describe('songSlice', () => {
       expect(api.get).toHaveBeenCalledWith('songs/artists');
       expect(store.getState().songs.filterOptions.artist).toEqual(artists);
     });
-
-    it('should set genre filter options on success', async () => {
-      const genres = ['Pop', 'Rock'];
-      (api.get as any).mockResolvedValue({ data: genres });
-
-      const store = createStore(defaultState);
-      await store.dispatch(fetchFilterOptions('genre'));
-
-      expect(api.get).toHaveBeenCalledWith('songs/genres');
-      expect(store.getState().songs.filterOptions.genre).toEqual(genres);
-    });
   });
 
   describe('fetchFilteredSongs thunk', () => {
@@ -100,14 +89,14 @@ describe('songSlice', () => {
       expect(store.getState().songs.songs[1].title).toBe('B');
     });
 
-    it('should fetch filtered songs with query params', async () => {
-      const songs = [{ id: 's1', title: 'Pop Song' }];
+    it('should fetch filtered songs with artist query param', async () => {
+      const songs = [{ id: 's1', title: 'Artist Song' }];
       (api.get as any).mockResolvedValue({ data: songs });
 
       const store = createStore(defaultState);
-      await store.dispatch(fetchFilteredSongs({ type: 'genre', value: 'Pop' }));
+      await store.dispatch(fetchFilteredSongs({ type: 'artist', value: 'Drake' }));
 
-      expect(api.get).toHaveBeenCalledWith('songs?genre=Pop');
+      expect(api.get).toHaveBeenCalledWith('songs?artist=Drake');
       expect(store.getState().songs.songs).toEqual(songs);
     });
   });
@@ -157,7 +146,6 @@ describe('songSlice', () => {
       await store.dispatch(deleteSong('s1'));
 
       expect(api.get).toHaveBeenCalledWith('songs/artists');
-      expect(api.get).toHaveBeenCalledWith('songs/genres');
     });
 
     it('should not remove songs on failure', async () => {

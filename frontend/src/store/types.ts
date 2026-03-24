@@ -1,5 +1,5 @@
 // Song types
-export type FilterType = 'artist' | 'genre';
+export type FilterType = 'artist';
 
 export interface SongState {
   filterOptions: Record<FilterType, any[]>;

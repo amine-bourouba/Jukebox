@@ -233,6 +233,66 @@ describe('SongsService', () => {
     });
   });
 
+  describe('getAllSongs', () => {
+    it('should return all songs for user ordered by title', async () => {
+      const songs = [
+        { id: 's1', title: 'Alpha', ownerId: 'user-1' },
+        { id: 's2', title: 'Beta', ownerId: 'user-1' },
+      ];
+      prisma.song.findMany.mockResolvedValue(songs);
+
+      const result = await service.getAllSongs('user-1');
+
+      expect(prisma.song.findMany).toHaveBeenCalledWith({
+        where: { ownerId: 'user-1' },
+        orderBy: { title: 'asc' },
+      });
+      expect(result).toEqual(songs);
+    });
+
+    it('should filter by artist when provided', async () => {
+      prisma.song.findMany.mockResolvedValue([]);
+
+      await service.getAllSongs('user-1', 'Drake');
+
+      expect(prisma.song.findMany).toHaveBeenCalledWith({
+        where: { ownerId: 'user-1', artist: { equals: 'Drake', mode: 'insensitive' } },
+        orderBy: { title: 'asc' },
+      });
+    });
+  });
+
+  describe('getDistinctArtists', () => {
+    it('should return distinct artist names', async () => {
+      prisma.song.findMany.mockResolvedValue([
+        { artist: 'Adele' },
+        { artist: 'Drake' },
+      ]);
+
+      const result = await service.getDistinctArtists('user-1');
+
+      expect(prisma.song.findMany).toHaveBeenCalledWith({
+        where: { ownerId: 'user-1' },
+        select: { artist: true },
+        distinct: ['artist'],
+        orderBy: { artist: 'asc' },
+      });
+      expect(result).toEqual(['Adele', 'Drake']);
+    });
+
+    it('should filter out falsy artist values', async () => {
+      prisma.song.findMany.mockResolvedValue([
+        { artist: 'Adele' },
+        { artist: '' },
+        { artist: null },
+      ]);
+
+      const result = await service.getDistinctArtists('user-1');
+
+      expect(result).toEqual(['Adele']);
+    });
+  });
+
   describe('getLikedSongs', () => {
     it('should return paginated liked songs', async () => {
       const likedSongs = [{ userId: 'user-1', songId: 'song-1', song: { title: 'Test' } }];

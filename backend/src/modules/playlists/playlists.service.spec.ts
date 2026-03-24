@@ -190,4 +190,45 @@ describe('PlaylistsService', () => {
         .rejects.toThrow('Playlist not found or unauthorized');
     });
   });
+
+  describe('updatePlaylist', () => {
+    it('should update an owned playlist', async () => {
+      const existing = { id: 'pl-1', ownerId: 'user-1', title: 'Old', description: null };
+      const updated = { ...existing, title: 'New Title' };
+      prisma.playlist.findFirst.mockResolvedValue(existing);
+      prisma.playlist.update.mockResolvedValue(updated);
+
+      const result = await service.updatePlaylist('user-1', 'pl-1', { title: 'New Title' });
+
+      expect(prisma.playlist.update).toHaveBeenCalledWith({
+        where: { id: 'pl-1' },
+        data: { title: 'New Title' },
+      });
+      expect(result).toEqual(updated);
+    });
+
+    it('should update description only', async () => {
+      const existing = { id: 'pl-1', ownerId: 'user-1', title: 'My Playlist', description: null };
+      const updated = { ...existing, description: 'A great playlist' };
+      prisma.playlist.findFirst.mockResolvedValue(existing);
+      prisma.playlist.update.mockResolvedValue(updated);
+
+      const result = await service.updatePlaylist('user-1', 'pl-1', { description: 'A great playlist' });
+
+      expect(prisma.playlist.update).toHaveBeenCalledWith({
+        where: { id: 'pl-1' },
+        data: { description: 'A great playlist' },
+      });
+      expect(result).toEqual(updated);
+    });
+
+    it('should return null if playlist not found or not owned', async () => {
+      prisma.playlist.findFirst.mockResolvedValue(null);
+
+      const result = await service.updatePlaylist('user-1', 'pl-1', { title: 'X' });
+
+      expect(prisma.playlist.update).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+  });
 });
