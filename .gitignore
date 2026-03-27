@@ -49,3 +49,5 @@ vitest.config.*.timestamp*
 test-output
 
 uploads
+
+settings.local.json

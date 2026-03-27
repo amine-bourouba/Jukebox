@@ -2,9 +2,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(() => ({
+export default defineConfig(({ mode }) => ({
   root: __dirname,
   cacheDir: '../node_modules/.vite/frontend',
+  define: {
+    // Ensure React loads its development build during tests so that act() works.
+    // In all other modes (dev/production) keep the mode value as-is.
+    'process.env.NODE_ENV': JSON.stringify(mode === 'test' ? 'test' : mode === 'production' ? 'production' : 'development'),
+  },
   server: {
     port: 8000,
     host: 'localhost',
