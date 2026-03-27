@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
+import { IoMusicalNotes } from 'react-icons/io5';
 import { useContextMenu } from '../../../components/ContextMenu/useContextMenu';
 
 interface SongListElementProps {
@@ -78,19 +79,23 @@ export default function SongListElement({
       onContextMenu={handleContextMenu}
     >
       {/* Position Column */}
-      <td className="whitespace-nowrap pr-3 text-sm">
+      <td className="whitespace-nowrap pr-2 text-sm">
         <span className="text-white">{playlistSong.position}</span>
       </td>
 
       {/* Title & Artist Column */}
-      <td className="whitespace-nowrap pl-4 pr-3 text-sm sm:pl-0">
+      <td className="whitespace-nowrap pl-2 pr-3 text-sm">
         <div className="flex items-center">
-          <div className="size-8 shrink-0">
-            <img
-              alt={`${playlistSong.song.title} thumbnail`}
-              src={playlistSong.song.thumbnail}
-              className="size-8 rounded-full dark:outline dark:outline-white/10"
-            />
+          <div className="size-8 shrink-0 rounded-full overflow-hidden bg-white/10 flex items-center justify-center dark:outline dark:outline-white/10">
+            {playlistSong.song.thumbnail ? (
+              <img
+                alt={`${playlistSong.song.title} thumbnail`}
+                src={playlistSong.song.thumbnail}
+                className="size-8 object-cover"
+              />
+            ) : (
+              <IoMusicalNotes size={16} className="text-amethyst" />
+            )}
           </div>
           <div className="ml-4">
             <div className="font-medium text-white">{playlistSong.song.title}</div>

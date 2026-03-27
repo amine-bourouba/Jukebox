@@ -21,6 +21,11 @@ vi.mock('./SongListItem', () => ({
   ),
 }));
 
+// Mock ArtistView so SongList routing tests stay isolated
+vi.mock('./ArtistView', () => ({
+  default: () => <div data-testid="artist-view">ArtistView</div>,
+}));
+
 // Mock ContextMenu hook
 vi.mock('../../../components/ContextMenu/useContextMenu', () => ({
   useContextMenu: () => ({
@@ -31,7 +36,7 @@ vi.mock('../../../components/ContextMenu/useContextMenu', () => ({
 
 import SongList from './SongList';
 
-function createStore(playerOverrides: any = {}) {
+function createStore(playerOverrides: any = {}, songsOverrides: any = {}) {
   return configureStore({
     reducer: { player: playerReducer, songs: songsReducer },
     preloadedState: {
@@ -49,6 +54,8 @@ function createStore(playerOverrides: any = {}) {
         filterOptions: { artist: [] },
         filter: { type: 'all', value: '' },
         songs: [],
+        likedSongIds: [],
+        ...songsOverrides,
       },
     },
   });
@@ -110,6 +117,36 @@ describe('SongList', () => {
     expect(screen.getByText('Title')).toBeInTheDocument();
     expect(screen.getByText('Album')).toBeInTheDocument();
     expect(screen.getByText('Date Added')).toBeInTheDocument();
+  });
+
+  it('should render ArtistView when filter type is artist with a value', () => {
+    const store = createStore({}, { filter: { type: 'artist', value: 'Queen' } });
+    render(
+      <Provider store={store}>
+        <SongList />
+      </Provider>
+    );
+    expect(screen.getByTestId('artist-view')).toBeInTheDocument();
+  });
+
+  it('should NOT render ArtistView when filter type is artist but value is empty', () => {
+    const store = createStore({}, { filter: { type: 'artist', value: '' } });
+    render(
+      <Provider store={store}>
+        <SongList />
+      </Provider>
+    );
+    expect(screen.queryByTestId('artist-view')).toBeNull();
+    expect(screen.getByText('All Songs')).toBeInTheDocument();
+  });
+
+  it('should render Library label in all-songs view', () => {
+    render(
+      <Provider store={createStore()}>
+        <SongList />
+      </Provider>
+    );
+    expect(screen.getByText('Library')).toBeInTheDocument();
   });
 
   it('should render song items', () => {
