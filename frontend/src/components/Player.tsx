@@ -103,7 +103,7 @@ export default function Player() {
   }, [blobUrl]);
 
   return (
-    <footer className="fixed bottom-0 w-full bg-shadow bg-opacity-95 flex items-center justify-between px-6 py-4 z-10">
+    <footer className="fixed bottom-0 w-full bg-shadow bg-opacity-95 flex items-center px-6 py-4 z-10">
       {/* Audio element */}
       {blobUrl && (
         <audio
@@ -115,20 +115,20 @@ export default function Player() {
       )}
 
       {/* Track Info */}
-      <div className="flex items-center gap-4 min-w-[200px]">
+      <div className="w-1/3 flex items-center gap-4 overflow-hidden">
         {currentTrack?.coverUrl ? (
-          <img src={currentTrack.coverUrl} alt="cover" className="w-12 h-12 rounded-lg shadow" />
+          <img src={currentTrack.coverUrl} alt="cover" className="w-12 h-12 rounded-lg shadow shrink-0" />
         ) : (
-          <div className="w-12 h-12 rounded-lg bg-shadow flex items-center justify-center text-amethyst">🎵</div>
+          <div className="w-12 h-12 rounded-lg bg-shadow flex items-center justify-center text-amethyst shrink-0">🎵</div>
         )}
-        <div>
-          <div className="text-silver font-semibold">{currentTrack?.title || 'No Track'}</div>
-          <div className="text-amethyst text-sm">{currentTrack?.artist || ''}</div>
+        <div className="min-w-0">
+          <div className="text-silver font-semibold truncate">{currentTrack?.title || 'No Track'}</div>
+          <div className="text-amethyst text-sm truncate">{currentTrack?.artist || ''}</div>
         </div>
       </div>
 
       {/* Playback Controls */}
-      <div className="flex flex-col items-center flex-1 mx-4">
+      <div className="w-1/3 flex flex-col items-center">
         <div className="flex items-center gap-6 mb-2">
           {/* Shuffle Button */}
           <button
@@ -178,7 +178,7 @@ export default function Player() {
       </div>
 
       {/* Volume & Queue */}
-      <div className="flex items-center gap-6 min-w-[180px] justify-end">
+      <div className="w-1/3 flex items-center gap-6 justify-end">
         <div className="flex items-center gap-2">
           <MdVolumeUp size={24} className="text-amethyst" />
           <input
