@@ -205,7 +205,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             icon: MdDelete,
             color: 'text-red-400',
             hoverColor: 'hover:bg-red-500/10',
-            onClick: () => dispatch(deleteSong(data.songId)),
+            onClick: () => dispatch(deleteSong(data.song.id)),
           },
         ];
 
