@@ -4,6 +4,7 @@ import { fetchFilteredSongs } from '../../../store/songSlice';
 import { setTrack } from '../../../store/playerSlice';
 import { RootState, AppDispatch } from '../../../store/store';
 import SongListElement from './SongListItem';
+import ArtistView from './ArtistView';
 
 import { MdAccessTime } from "react-icons/md";
 import { TbPlaylist } from "react-icons/tb";
@@ -27,6 +28,12 @@ export default function SongList() {
       coverUrl: song.coverImageUrl || song.thumbnail || song.coverUrl,
     }));
   };
+
+  const isArtistView = filter.type === 'artist' && !!filter.value;
+
+  if (isArtistView) {
+    return <ArtistView />;
+  }
 
   if (selectedPlaylistId) {
     return (
@@ -60,7 +67,7 @@ export default function SongList() {
             <table className="relative min-w-full divide-y divide-gray-300">
               <thead className="sticky top-0">
                 <tr>
-                  <th scope="col" className="py-4 w-12 text-left text-sm font-semibold text-white">
+                  <th scope="col" className="py-4 w-8 text-left text-sm font-semibold text-white">
                     #
                   </th>
                   <th scope="col" className="pl-1 py-4 w-1/3 text-left text-sm font-semibold text-white">
@@ -94,8 +101,7 @@ export default function SongList() {
   }
 
   // Filtered / All Songs view
-  const isArtistView = filter.type === 'artist' && filter.value;
-  const heading = isArtistView ? filter.value : 'All Songs';
+  const heading = 'All Songs';
 
   return (
     <div className="flex flex-col h-full overflow-hidden pt-8">
@@ -108,9 +114,7 @@ export default function SongList() {
             <div className="flex flex-col justify-between">
               <div/>
               <div>
-                {isArtistView ? null : (
-                  <p className="text-sm font-bold text-white">Library</p>
-                )}
+                <p className="text-sm font-bold text-white">Library</p>
                 <p className="mt-1 text-5xl font-extrabold text-white">
                   {heading}
                 </p>
@@ -128,7 +132,7 @@ export default function SongList() {
           <table className="relative min-w-full divide-y divide-gray-300">
             <thead className="sticky top-0">
               <tr>
-                <th scope="col" className="py-4 w-12 text-left text-sm font-semibold text-white">
+                <th scope="col" className="py-4 w-8 text-left text-sm font-semibold text-white">
                   #
                 </th>
                 <th scope="col" className="pl-1 py-4 w-1/3 text-left text-sm font-semibold text-white">
