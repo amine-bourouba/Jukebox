@@ -33,6 +33,7 @@ export class PlaylistsService {
     return this.prisma.playlist.findMany({
       where: { ownerId: userId },
       orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { playlistSongs: true } } },
     });
   }
 

@@ -62,6 +62,7 @@ describe('PlaylistsService', () => {
       expect(prisma.playlist.findMany).toHaveBeenCalledWith({
         where: { ownerId: 'user-1' },
         orderBy: { createdAt: 'desc' },
+        include: { _count: { select: { playlistSongs: true } } },
       });
       expect(result).toEqual(playlists);
     });
