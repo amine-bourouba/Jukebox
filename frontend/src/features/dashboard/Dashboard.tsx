@@ -13,22 +13,23 @@ export default function Dashboard() {
   return (
     <div className="h-screen bg-gradient-to-br from-midnight via-sapphire to-amethyst flex flex-col overflow-hidden">
       <Header />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         <Sidebar />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 flex flex-row overflow-hidden">
-            <div className={`${currentTrack ? 'basis-3/4' : 'flex-1'}`}>
+        <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-row overflow-hidden min-h-0 pb-20">
+            <div className={`${currentTrack ? 'basis-3/4' : 'flex-1'} overflow-hidden`}>
               <SongList />
             </div>
-            {currentTrack && <div className="basis-1/4">
-              <SongPreview currentTrack={currentTrack}/>
-            </div>}
-          </div>
-          <div className="mt-34">
-            <Player />
+            {currentTrack && (
+              <div className="basis-1/4 overflow-hidden">
+                <SongPreview currentTrack={currentTrack} />
+              </div>
+            )}
           </div>
         </main>
       </div>
+      {/* Player lives outside overflow-hidden containers so fixed positioning is never clipped */}
+      <Player />
     </div>
   );
 }
