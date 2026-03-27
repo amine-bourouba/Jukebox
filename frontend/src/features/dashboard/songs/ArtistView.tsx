@@ -1,31 +1,37 @@
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { MdAccessTime } from 'react-icons/md';
+import { MdAccessTime, MdArrowBack } from 'react-icons/md';
+import { IoAlbums } from 'react-icons/io5';
 
 import { RootState, AppDispatch } from '../../../store/store';
 import { setTrack, setQueue, setShuffle } from '../../../store/playerSlice';
 import ArtistHeader from './ArtistHeader';
-import AlbumSection from './AlbumSection';
+import AlbumCard from './AlbumCard';
+import SongListItem from './SongListItem';
 import type { PlaylistSongShape } from './AlbumSection';
 
 export interface AlbumGroup {
   albumName: string;
+  coverUrl?: string;
   songs: PlaylistSongShape[];
 }
 
 /** Groups a flat song array into sorted album buckets.
  *  Songs without an album fall into "Singles". */
 export function groupByAlbum(songs: any[]): AlbumGroup[] {
-  const map = new Map<string, PlaylistSongShape[]>();
+  const map = new Map<string, { songs: PlaylistSongShape[]; coverUrl?: string }>();
 
   songs.forEach((song) => {
     const album = song.album?.trim() || 'Singles';
-    if (!map.has(album)) map.set(album, []);
+    if (!map.has(album)) map.set(album, { songs: [] });
     const bucket = map.get(album)!;
-    bucket.push({
+    if (!bucket.coverUrl && (song.coverImageUrl || song.thumbnail)) {
+      bucket.coverUrl = song.coverImageUrl || song.thumbnail;
+    }
+    bucket.songs.push({
       id: `${song.id}-${album}`,
-      position: bucket.length + 1,
+      position: bucket.songs.length + 1,
       addedAt: song.uploadedAt || '',
       song: {
         ...song,
@@ -36,7 +42,7 @@ export function groupByAlbum(songs: any[]): AlbumGroup[] {
 
   return Array.from(map.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([albumName, songs]) => ({ albumName, songs }));
+    .map(([albumName, { songs, coverUrl }]) => ({ albumName, coverUrl, songs }));
 }
 
 function normaliseTrack(song: any) {
@@ -60,14 +66,12 @@ export default function ArtistView() {
   const songs = useSelector((state: RootState) => state.songs.songs);
   const artistName = useSelector((state: RootState) => state.songs.filter.value);
 
-  const handlePlaySong = useCallback(
-    (song: any) => {
-      const tracks = songs.map(normaliseTrack);
-      dispatch(setQueue(tracks));
-      dispatch(setTrack(normaliseTrack(song)));
-    },
-    [dispatch, songs]
-  );
+  const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
+
+  const albumGroups = groupByAlbum(songs);
+  const selectedGroup = selectedAlbum
+    ? albumGroups.find(g => g.albumName === selectedAlbum)
+    : null;
 
   const handlePlayAll = useCallback(() => {
     if (!songs.length) return;
@@ -85,7 +89,15 @@ export default function ArtistView() {
     dispatch(setTrack(shuffled[0]));
   }, [dispatch, songs]);
 
-  const albumGroups = groupByAlbum(songs);
+  // Playing a song from the album detail view queues that album's songs
+  const handlePlayAlbumSong = useCallback(
+    (song: any, albumSongs: PlaylistSongShape[]) => {
+      const tracks = albumSongs.map(ps => normaliseTrack(ps.song));
+      dispatch(setQueue(tracks));
+      dispatch(setTrack(normaliseTrack(song)));
+    },
+    [dispatch]
+  );
 
   return (
     <div className="flex flex-col h-full overflow-hidden pt-8">
@@ -97,39 +109,66 @@ export default function ArtistView() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <table className="relative min-w-full divide-y divide-gray-300">
-            <thead className="sticky top-0">
-              <tr>
-                <th scope="col" className="py-4 w-12 text-left text-sm font-semibold text-white">
-                  #
-                </th>
-                <th scope="col" className="pl-1 py-4 w-1/3 text-left text-sm font-semibold text-white">
-                  Title
-                </th>
-                <th scope="col" className="pl-3 py-4 w-1/3 text-left text-sm font-semibold text-white">
-                  Album
-                </th>
-                <th scope="col" className="pl-3 py-4 text-left text-sm font-semibold text-white">
-                  Date Added
-                </th>
-                <th scope="col" className="py-4 pl-3 pr-4 sm:pr-0">
-                  <MdAccessTime size={20} className="text-white" />
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-white/10 bg-transparent">
-              {albumGroups.map(({ albumName, songs: albumSongs }) => (
-                <AlbumSection
-                  key={albumName}
-                  albumName={albumName}
-                  songs={albumSongs}
-                  onPlay={handlePlaySong}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {selectedGroup ? (
+          /* ── Album detail view ── */
+          <div className="px-4 sm:px-6 lg:px-8">
+            {/* Back + album heading */}
+            <div className="flex items-center gap-3 mb-6">
+              <button
+                onClick={() => setSelectedAlbum(null)}
+                className="flex items-center gap-1 text-silver hover:text-moon transition-colors text-sm"
+                aria-label="Back to discography"
+              >
+                <MdArrowBack size={18} />
+                Discography
+              </button>
+              <span className="text-white/20">·</span>
+              <div className="flex items-center gap-2">
+                <IoAlbums size={16} className="text-amethyst" />
+                <span className="text-white font-semibold">{selectedGroup.albumName}</span>
+                <span className="text-silver text-sm">
+                  {selectedGroup.songs.length} {selectedGroup.songs.length === 1 ? 'song' : 'songs'}
+                </span>
+              </div>
+            </div>
+
+            {/* Song table */}
+            <table className="relative min-w-full divide-y divide-gray-300">
+              <thead className="sticky top-0">
+                <tr>
+                  <th scope="col" className="py-4 w-8 text-left text-sm font-semibold text-white">#</th>
+                  <th scope="col" className="pl-3 py-4 w-1/2 text-left text-sm font-semibold text-white">Title</th>
+                  <th scope="col" className="pl-3 py-4 text-left text-sm font-semibold text-white">Date Added</th>
+                  <th scope="col" className="py-4 pl-3 pr-4 sm:pr-0">
+                    <MdAccessTime size={20} className="text-white" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-white/10 bg-transparent">
+                {selectedGroup.songs.map(ps => (
+                  <SongListItem
+                    key={ps.id}
+                    playlistSong={ps}
+                    onPlay={song => handlePlayAlbumSong(song, selectedGroup.songs)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* ── Album card grid ── */
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 px-4 sm:px-6 lg:px-8 py-4">
+            {albumGroups.map(({ albumName, songs: albumSongs, coverUrl }) => (
+              <AlbumCard
+                key={albumName}
+                albumName={albumName}
+                songCount={albumSongs.length}
+                coverUrl={coverUrl}
+                onClick={() => setSelectedAlbum(albumName)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

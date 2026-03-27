@@ -23,19 +23,25 @@ vi.mock('./ArtistHeader', () => ({
   ),
 }));
 
-vi.mock('./AlbumSection', () => ({
-  default: ({ albumName, songs, onPlay }: any) => (
-    <tr data-testid={`album-${albumName}`}>
+vi.mock('./AlbumCard', () => ({
+  default: ({ albumName, songCount, coverUrl, onClick }: any) => (
+    <button
+      data-testid={`card-${albumName}`}
+      data-cover={coverUrl ?? ''}
+      onClick={onClick}
+    >
+      {albumName} ({songCount})
+    </button>
+  ),
+}));
+
+vi.mock('./SongListItem', () => ({
+  default: ({ playlistSong, onPlay }: any) => (
+    <tr data-testid={`song-row-${playlistSong.song.id}`}>
       <td>
-        {songs.map((s: any) => (
-          <button
-            key={s.id}
-            data-testid={`play-song-${s.song.id}`}
-            onClick={() => onPlay(s.song)}
-          >
-            {s.song.title}
-          </button>
-        ))}
+        <button data-testid={`play-song-${playlistSong.song.id}`} onClick={() => onPlay(playlistSong.song)}>
+          {playlistSong.song.title}
+        </button>
       </td>
     </tr>
   ),
@@ -47,13 +53,13 @@ vi.mock('../../../components/ContextMenu/useContextMenu', () => ({
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeSong(id: string, title: string, album?: string) {
+function makeSong(id: string, title: string, album?: string, coverImageUrl?: string) {
   return {
     id,
     title,
     artist: 'Queen',
     album: album ?? null,
-    coverImageUrl: null,
+    coverImageUrl: coverImageUrl ?? null,
     thumbnail: '',
     uploadedAt: '2024-01-01',
     duration: 200,
@@ -111,7 +117,6 @@ describe('groupByAlbum', () => {
       makeSong('s1', 'A', '  Space Album  '),
       makeSong('s2', 'B', 'Space Album'),
     ];
-    // Both map to same trimmed key — should be one group
     const groups = groupByAlbum(songs);
     expect(groups).toHaveLength(1);
     expect(groups[0].songs).toHaveLength(2);
@@ -128,10 +133,7 @@ describe('groupByAlbum', () => {
   });
 
   it('assigns 1-based position within each album', () => {
-    const songs = [
-      makeSong('s1', 'T1', 'Album'),
-      makeSong('s2', 'T2', 'Album'),
-    ];
+    const songs = [makeSong('s1', 'T1', 'Album'), makeSong('s2', 'T2', 'Album')];
     const groups = groupByAlbum(songs);
     expect(groups[0].songs[0].position).toBe(1);
     expect(groups[0].songs[1].position).toBe(2);
@@ -151,6 +153,21 @@ describe('groupByAlbum', () => {
     const song = { ...makeSong('s1', 'T'), coverImageUrl: null, thumbnail: '/thumb.jpg' };
     const groups = groupByAlbum([song]);
     expect(groups[0].songs[0].song.thumbnail).toBe('/thumb.jpg');
+  });
+
+  it('extracts coverUrl from the first song with art', () => {
+    const songs = [
+      makeSong('s1', 'T1', 'Album'),
+      makeSong('s2', 'T2', 'Album', '/cover.jpg'),
+    ];
+    const groups = groupByAlbum(songs);
+    expect(groups[0].coverUrl).toBe('/cover.jpg');
+  });
+
+  it('leaves coverUrl undefined when no song has art', () => {
+    const songs = [makeSong('s1', 'T1', 'Album')];
+    const groups = groupByAlbum(songs);
+    expect(groups[0].coverUrl).toBeUndefined();
   });
 });
 
@@ -172,7 +189,7 @@ describe('ArtistView', () => {
     expect(screen.getByTestId('hero-count').textContent).toBe('2');
   });
 
-  it('renders an AlbumSection for each distinct album', () => {
+  it('renders an AlbumCard for each distinct album', () => {
     const songs = [
       makeSong('s1', 'T1', 'Album A'),
       makeSong('s2', 'T2', 'Album B'),
@@ -180,23 +197,55 @@ describe('ArtistView', () => {
     ];
     const store = createStore(songs);
     render(<Provider store={store}><ArtistView /></Provider>);
-    expect(screen.getByTestId('album-Album A')).toBeInTheDocument();
-    expect(screen.getByTestId('album-Album B')).toBeInTheDocument();
+    expect(screen.getByTestId('card-Album A')).toBeInTheDocument();
+    expect(screen.getByTestId('card-Album B')).toBeInTheDocument();
   });
 
-  it('renders a "Singles" section for songs with no album', () => {
+  it('renders a "Singles" card for songs with no album', () => {
     const store = createStore([makeSong('s1', 'Solo Track')]);
     render(<Provider store={store}><ArtistView /></Provider>);
-    expect(screen.getByTestId('album-Singles')).toBeInTheDocument();
+    expect(screen.getByTestId('card-Singles')).toBeInTheDocument();
   });
 
-  it('renders table column headers', () => {
-    const store = createStore();
+  it('passes coverUrl to the AlbumCard', () => {
+    const songs = [makeSong('s1', 'T1', 'Album A', '/cover.jpg')];
+    const store = createStore(songs);
     render(<Provider store={store}><ArtistView /></Provider>);
-    expect(screen.getByText('#')).toBeInTheDocument();
-    expect(screen.getByText('Title')).toBeInTheDocument();
-    expect(screen.getByText('Album')).toBeInTheDocument();
-    expect(screen.getByText('Date Added')).toBeInTheDocument();
+    expect(screen.getByTestId('card-Album A').getAttribute('data-cover')).toBe('/cover.jpg');
+  });
+
+  it('shows album song list when a card is clicked', () => {
+    const songs = [makeSong('s1', 'Track One', 'Debut')];
+    const store = createStore(songs);
+    render(<Provider store={store}><ArtistView /></Provider>);
+
+    fireEvent.click(screen.getByTestId('card-Debut'));
+
+    expect(screen.getByTestId('song-row-s1')).toBeInTheDocument();
+    expect(screen.queryByTestId('card-Debut')).toBeNull();
+  });
+
+  it('shows album name and song count in detail view heading', () => {
+    const songs = [makeSong('s1', 'T1', 'Debut'), makeSong('s2', 'T2', 'Debut')];
+    const store = createStore(songs);
+    render(<Provider store={store}><ArtistView /></Provider>);
+
+    fireEvent.click(screen.getByTestId('card-Debut'));
+
+    expect(screen.getByText('Debut')).toBeInTheDocument();
+    expect(screen.getByText('2 songs')).toBeInTheDocument();
+  });
+
+  it('returns to card grid when Back is clicked', () => {
+    const songs = [makeSong('s1', 'T1', 'Debut')];
+    const store = createStore(songs);
+    render(<Provider store={store}><ArtistView /></Provider>);
+
+    fireEvent.click(screen.getByTestId('card-Debut'));
+    expect(screen.queryByTestId('card-Debut')).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('Back to discography'));
+    expect(screen.getByTestId('card-Debut')).toBeInTheDocument();
   });
 
   it('dispatches setQueue and setTrack (shuffle=false) when Play All is clicked', () => {
@@ -209,7 +258,6 @@ describe('ArtistView', () => {
     const state = store.getState().player;
     expect(state.shuffle).toBe(false);
     expect(state.queue).toHaveLength(2);
-    expect(state.currentTrack).not.toBeNull();
     expect(state.currentTrack?.id).toBe('s1');
   });
 
@@ -220,7 +268,7 @@ describe('ArtistView', () => {
     expect(store.getState().player.currentTrack).toBeNull();
   });
 
-  it('dispatches setQueue, setTrack, and setShuffle(true) when Shuffle is clicked', () => {
+  it('dispatches setShuffle(true) and plays when Shuffle is clicked', () => {
     const songs = [makeSong('s1', 'T1', 'A'), makeSong('s2', 'T2', 'B')];
     const store = createStore(songs);
     render(<Provider store={store}><ArtistView /></Provider>);
@@ -240,16 +288,22 @@ describe('ArtistView', () => {
     expect(store.getState().player.currentTrack).toBeNull();
   });
 
-  it('dispatches setQueue and setTrack when a song row is played', () => {
-    const songs = [makeSong('s1', 'T1', 'A'), makeSong('s2', 'T2', 'A')];
+  it('queues the album songs (not all artist songs) when a song is played from detail view', () => {
+    const songs = [
+      makeSong('s1', 'Album A Track', 'Album A'),
+      makeSong('s2', 'Album B Track', 'Album B'),
+    ];
     const store = createStore(songs);
     render(<Provider store={store}><ArtistView /></Provider>);
 
+    fireEvent.click(screen.getByTestId('card-Album A'));
     fireEvent.click(screen.getByTestId('play-song-s1'));
 
     const state = store.getState().player;
     expect(state.currentTrack?.id).toBe('s1');
-    expect(state.queue).toHaveLength(2);
+    // Only Album A's songs in the queue
+    expect(state.queue).toHaveLength(1);
+    expect(state.queue[0].id).toBe('s1');
   });
 
   it('normalises coverUrl from coverImageUrl when playing', () => {
