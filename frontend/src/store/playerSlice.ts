@@ -41,6 +41,7 @@ export const addSongToPlaylist = createAsyncThunk(
     try {
       await api.post(`/playlists/${playlistId}/songs`, { songId });
       const state = getState() as { player: PlayerState };
+      dispatch(fetchPlaylists());
       if (state.player.selectedPlaylistId === playlistId) {
         dispatch(fetchSelectedPlaylist(playlistId));
       }
@@ -60,6 +61,7 @@ export const removeSongFromPlaylist = createAsyncThunk(
     try {
       await api.delete(`/playlists/${playlistId}/songs/${songId}`);
       const state = getState() as { player: PlayerState };
+      dispatch(fetchPlaylists());
       if (state.player.selectedPlaylistId === playlistId) {
         dispatch(fetchSelectedPlaylist(playlistId));
       }

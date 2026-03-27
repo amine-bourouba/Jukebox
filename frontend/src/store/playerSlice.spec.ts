@@ -154,7 +154,7 @@ describe('playerSlice', () => {
   });
 
   describe('addSongToPlaylist thunk', () => {
-    it('should call API and re-fetch if selected playlist matches', async () => {
+    it('should call API, refresh playlist list, and re-fetch selected playlist when it matches', async () => {
       (api.post as any).mockResolvedValue({});
       (api.get as any).mockResolvedValue({ data: { id: 'pl-1', songs: [] } });
 
@@ -162,38 +162,43 @@ describe('playerSlice', () => {
       await store.dispatch(addSongToPlaylist({ playlistId: 'pl-1', songId: 'song-1' }));
 
       expect(api.post).toHaveBeenCalledWith('/playlists/pl-1/songs', { songId: 'song-1' });
-      // Should re-fetch the selected playlist
+      expect(api.get).toHaveBeenCalledWith('/playlists');
       expect(api.get).toHaveBeenCalledWith('/playlists/pl-1');
     });
 
-    it('should not re-fetch if a different playlist is selected', async () => {
+    it('should refresh playlist list but not re-fetch a different selected playlist', async () => {
       (api.post as any).mockResolvedValue({});
+      (api.get as any).mockResolvedValue({ data: [] });
 
       const store = createStore({ ...defaultState, selectedPlaylistId: 'pl-other' });
       await store.dispatch(addSongToPlaylist({ playlistId: 'pl-1', songId: 'song-1' }));
 
       expect(api.post).toHaveBeenCalledWith('/playlists/pl-1/songs', { songId: 'song-1' });
-      expect(api.get).not.toHaveBeenCalled();
+      expect(api.get).toHaveBeenCalledWith('/playlists');
+      expect(api.get).not.toHaveBeenCalledWith('/playlists/pl-other');
     });
   });
 
   describe('removeSongFromPlaylist thunk', () => {
-    it('should call API to remove song', async () => {
+    it('should call API to remove song and refresh playlist list', async () => {
       (api.delete as any).mockResolvedValue({});
+      (api.get as any).mockResolvedValue({ data: [] });
 
       const store = createStore({ ...defaultState, selectedPlaylistId: 'pl-other' });
       await store.dispatch(removeSongFromPlaylist({ playlistId: 'pl-1', songId: 'song-1' }));
 
       expect(api.delete).toHaveBeenCalledWith('/playlists/pl-1/songs/song-1');
+      expect(api.get).toHaveBeenCalledWith('/playlists');
     });
 
-    it('should re-fetch if selected playlist matches', async () => {
+    it('should also re-fetch selected playlist when it matches', async () => {
       (api.delete as any).mockResolvedValue({});
       (api.get as any).mockResolvedValue({ data: { id: 'pl-1', songs: [] } });
 
       const store = createStore({ ...defaultState, selectedPlaylistId: 'pl-1' });
       await store.dispatch(removeSongFromPlaylist({ playlistId: 'pl-1', songId: 'song-1' }));
 
+      expect(api.get).toHaveBeenCalledWith('/playlists');
       expect(api.get).toHaveBeenCalledWith('/playlists/pl-1');
     });
   });
