@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Req, NotFoundException, BadRequestException,
+  Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Req, NotFoundException, BadRequestException, HttpException,
   UseInterceptors, UploadedFiles,
   Res,
   StreamableFile,
@@ -9,14 +9,13 @@ import type { Response } from 'express';
 import { extname, join } from 'path';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
-import { MusicBrainzService } from './musicbrainz.service';
+import { AcoustIdService } from './acoustid.service';
 import { SongsService } from './songs.service';
 import { CreateSongDto } from './dto/create-song.dto';
 import { UpdateSongDto } from './dto/update-song.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 import { diskStorage } from 'multer';
-import * as mm from 'music-metadata';
 import { createReadStream, existsSync } from 'fs';
 
 
@@ -24,6 +23,22 @@ import { createReadStream, existsSync } from 'fs';
 function fileName(req: any, file: Express.Multer.File, callback: (error: Error | null, filename: string) => void) {
   const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
   callback(null, uniqueSuffix + extname(file.originalname));
+}
+
+/** Parses filenames common prefixes. */
+function parseFilename(original: string): { title: string; artist: string } {
+  const base = original.replace(/\.[^/.]+$/, '');
+  const match = base.match(/^(.+?)\s+-\s+(.+)$/);
+  if (match) {
+    const artist = match[1].trim();
+    // Strip common suffixes: (Official Video), (Audio), [4K], etc.
+    const title = match[2]
+      .replace(/\s*[\[(](?:Official|Audio|Music Video|Lyric Video|HD|4K|HQ|Remaster)[^\])]*/gi, '')
+      .replace(/[\[(\])].*$/, '')
+      .trim();
+    return { artist, title: title || match[2].trim() };
+  }
+  return { title: base, artist: '' };
 }
 
 function resolveSongFilePath(song: any): string {
@@ -38,7 +53,7 @@ function resolveSongFilePath(song: any): string {
 export class SongsController {
   constructor(
     private readonly songsService: SongsService,
-    private readonly musicBrainzService: MusicBrainzService
+    private readonly acoustIdService: AcoustIdService
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -71,6 +86,7 @@ export class SongsController {
       if (!deleted) throw new NotFoundException('Song not found or unauthorized');
       return { message: 'Song deleted' };
     } catch (error: any) {
+      if (error instanceof HttpException) throw error;
       throw new BadRequestException(error.message);
     }
   }
@@ -121,55 +137,42 @@ export class SongsController {
       const thumbnailFile = files.find(f => f.mimetype.startsWith('image/'));
       if (!songFile) throw new BadRequestException('Song file is required');
 
-      let finalData: any = {};
-      let mbData: any = null;
+      // 1. Read ID3 tags
+      let metadata: any = null;
+      try {
+        const { parseFile } = await import('music-metadata');
+        metadata = await parseFile(songFile.path);
+      } catch { /* no-op */ }
 
-      if (body.title && body.title.trim()) {
-        try {
-          mbData = await this.musicBrainzService.searchRecording(body.title.trim(), body.artist.trim());
-        } catch (err) {
-          mbData = null;
+      let tagArtist = '';
+      if (metadata) {
+        if (Array.isArray(metadata.common.artists) && metadata.common.artists.length > 0) {
+          tagArtist = metadata.common.artists[0];
+        } else if (metadata.common.artist) {
+          tagArtist = metadata.common.artist;
         }
       }
 
-      if (mbData) {
-        // Use MusicBrainz metadata
-        finalData = {
-          title: mbData.title,
-          artist: mbData.artist || '',
-          album: mbData.release || undefined,
-          duration: mbData.length ? Math.round(mbData.length / 1000) : undefined,
-        };
-      } else {
-        let metadata;
-        try {
-          metadata = await mm.parseFile(songFile.path);
-        } catch (err) {
-          metadata = null;
-        }
+      const tagTitle: string = metadata?.common.title ?? '';
+      const tagAlbum: string = metadata?.common.album ?? '';
+      const tagDuration: number | undefined = metadata?.format.duration
+        ? Math.round(metadata.format.duration)
+        : undefined;
 
-        let artist = '';
-        if (metadata) {
-          if (Array.isArray(metadata.common.artists) && metadata.common.artists.length > 0) {
-            artist = metadata.common.artists[0];
-          } else if (metadata.common.artist) {
-            artist = metadata.common.artist;
-          }
-        }
-
-        finalData = {
-          title: body.title || metadata?.common.title || songFile.originalname.replace(/\.[^/.]+$/, ''),
-          artist,
-          album: metadata?.common.album,
-          duration: metadata?.format.duration ? Math.round(metadata.format.duration) : undefined,
-        };
+      // 2. If ID3 tags are incomplete, try AcoustID fingerprinting
+      let acData: { title?: string; artist?: string; album?: string; duration?: number } | null = null;
+      if (!tagTitle || !tagArtist) {
+        acData = await this.acoustIdService.lookup(songFile.path);
       }
 
-      if (!finalData.title || !finalData.title.trim()) {
-        finalData.title = body.title || songFile.originalname.replace(/\.[^/.]+$/, '');
-        finalData.artist = '';
-        finalData.album = undefined;
-      }
+      // 3. Merge: user input > AcoustID > ID3 tags > filename parsing > raw filename
+      const parsed = parseFilename(songFile.originalname);
+      const finalData: any = {
+        title: body.title?.trim() || acData?.title || tagTitle || parsed.title,
+        artist: body.artist?.trim() || acData?.artist || tagArtist || parsed.artist,
+        album: acData?.album || tagAlbum || undefined,
+        duration: acData?.duration ?? tagDuration,
+      };
 
       return await this.songsService.createSongWithUpload(
         req.user.userId,

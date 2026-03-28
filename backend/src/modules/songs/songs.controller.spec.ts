@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { SongsController } from './songs.controller';
 import { SongsService } from './songs.service';
-import { MusicBrainzService } from './musicbrainz.service';
+import { AcoustIdService } from './acoustid.service';
 
 describe('SongsController', () => {
   let controller: SongsController;
@@ -25,15 +25,16 @@ describe('SongsController', () => {
       getDistinctArtists: vi.fn(),
     };
 
-    const musicBrainzService = {
-      searchRecording: vi.fn(),
+    const acoustIdService = {
+      lookup: vi.fn(),
+      fingerprint: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SongsController],
       providers: [
         { provide: SongsService, useValue: songsService },
-        { provide: MusicBrainzService, useValue: musicBrainzService },
+        { provide: AcoustIdService, useValue: acoustIdService },
       ],
     }).compile();
 
