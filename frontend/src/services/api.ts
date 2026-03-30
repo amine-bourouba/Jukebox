@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { store } from '../store/store';
-import setTokens from '../store/authSlice';
-import { logout } from '../store/authSlice';
+import { logout, setTokens } from '../store/authSlice';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
@@ -61,10 +60,10 @@ api.interceptors.response.use(
       }
 
       try {
-        // Call your refresh endpoint
+        const userId = store.getState().auth.user?.id || localStorage.getItem('userId');
         const res = await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/refresh`,
-          { refreshToken }
+          { userId, refreshToken }
         );
         const newToken = res.data.access_token;
         const newRefreshToken = res.data.refresh_token;

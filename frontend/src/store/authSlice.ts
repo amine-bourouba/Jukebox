@@ -101,6 +101,13 @@ const authSlice = createSlice({
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userId');
+      localStorage.removeItem('user');
+    },
+    setTokens(state, action: { payload: { token: string; refreshToken: string } }) {
+      state.token = action.payload.token;
+      state.refreshToken = action.payload.refreshToken;
+      localStorage.setItem('token', action.payload.token);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
   },
   extraReducers: builder => {
@@ -160,5 +167,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, setTokens } = authSlice.actions;
 export default authSlice.reducer;

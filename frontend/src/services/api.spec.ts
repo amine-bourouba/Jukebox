@@ -11,8 +11,8 @@ vi.mock('../store/store', () => ({
 }));
 
 vi.mock('../store/authSlice', () => ({
-  default: vi.fn((payload) => ({ type: 'auth/setTokens', payload })),
   logout: vi.fn(() => ({ type: 'auth/logout' })),
+  setTokens: vi.fn((payload) => ({ type: 'auth/setTokens', payload })),
 }));
 
 // Need to reset module state between tests since api.ts has module-level state (isRefreshing, failedQueue)
