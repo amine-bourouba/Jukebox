@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { MdAccessTime, MdArrowBack } from 'react-icons/md';
@@ -10,6 +10,7 @@ import ArtistHeader from './ArtistHeader';
 import AlbumCard from './AlbumCard';
 import SongListItem from './SongListItem';
 import type { PlaylistSongShape } from './AlbumSection';
+import api from '../../../services/api';
 
 export interface AlbumGroup {
   albumName: string;
@@ -63,10 +64,21 @@ function shuffleArray<T>(arr: T[]): T[] {
 
 export default function ArtistView() {
   const dispatch = useDispatch<AppDispatch>();
-  const songs = useSelector((state: RootState) => state.songs.songs);
-  const artistName = useSelector((state: RootState) => state.songs.filter.value);
+  const selectedArtistId = useSelector((state: RootState) => state.artists.selectedArtistId);
+  const artist = useSelector((state: RootState) =>
+    state.artists.artists.find(a => a.id === selectedArtistId) ?? null
+  );
 
+  const [songs, setSongs] = useState<any[]>([]);
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
+
+  // Fetch songs from Artist API endpoint
+  useEffect(() => {
+    if (!selectedArtistId) return;
+    setSongs([]);
+    setSelectedAlbum(null);
+    api.get(`/artists/${selectedArtistId}/songs`).then(res => setSongs(res.data));
+  }, [selectedArtistId]);
 
   const albumGroups = groupByAlbum(songs);
   const selectedGroup = selectedAlbum
@@ -89,7 +101,6 @@ export default function ArtistView() {
     dispatch(setTrack(shuffled[0]));
   }, [dispatch, songs]);
 
-  // Playing a song from the album detail view queues that album's songs
   const handlePlayAlbumSong = useCallback(
     (song: any, albumSongs: PlaylistSongShape[]) => {
       const tracks = albumSongs.map(ps => normaliseTrack(ps.song));
@@ -102,7 +113,7 @@ export default function ArtistView() {
   return (
     <div className="flex flex-col h-full overflow-hidden pt-8">
       <ArtistHeader
-        artistName={artistName}
+        artist={artist}
         songCount={songs.length}
         onPlay={handlePlayAll}
         onShuffle={handleShuffle}
@@ -112,7 +123,6 @@ export default function ArtistView() {
         {selectedGroup ? (
           /* ── Album detail view ── */
           <div className="px-4 sm:px-6 lg:px-8">
-            {/* Back + album heading */}
             <div className="flex items-center gap-3 mb-6">
               <button
                 onClick={() => setSelectedAlbum(null)}
@@ -132,7 +142,6 @@ export default function ArtistView() {
               </div>
             </div>
 
-            {/* Song table */}
             <table className="relative min-w-full divide-y divide-gray-300">
               <thead className="sticky top-0">
                 <tr>

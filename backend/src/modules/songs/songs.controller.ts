@@ -10,6 +10,7 @@ import { extname, join } from 'path';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { AcoustIdService } from './acoustid.service';
+import { ArtistsService } from '../artists/artists.service';
 import { SongsService } from './songs.service';
 import { CreateSongDto } from './dto/create-song.dto';
 import { UpdateSongDto } from './dto/update-song.dto';
@@ -53,7 +54,8 @@ function resolveSongFilePath(song: any): string {
 export class SongsController {
   constructor(
     private readonly songsService: SongsService,
-    private readonly acoustIdService: AcoustIdService
+    private readonly acoustIdService: AcoustIdService,
+    private readonly artistsService: ArtistsService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -173,6 +175,11 @@ export class SongsController {
         album: acData?.album || tagAlbum || undefined,
         duration: acData?.duration ?? tagDuration,
       };
+
+      // 4. Auto-link Artist entity if we have an artist name
+      if (finalData.artist) {
+        finalData.artistId = await this.artistsService.findOrCreate(req.user.userId, finalData.artist);
+      }
 
       return await this.songsService.createSongWithUpload(
         req.user.userId,

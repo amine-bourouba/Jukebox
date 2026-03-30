@@ -4,6 +4,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { SongsController } from './songs.controller';
 import { SongsService } from './songs.service';
 import { AcoustIdService } from './acoustid.service';
+import { ArtistsService } from '../artists/artists.service';
 
 describe('SongsController', () => {
   let controller: SongsController;
@@ -25,16 +26,15 @@ describe('SongsController', () => {
       getDistinctArtists: vi.fn(),
     };
 
-    const acoustIdService = {
-      lookup: vi.fn(),
-      fingerprint: vi.fn(),
-    };
+    const acoustIdService = { lookup: vi.fn(), fingerprint: vi.fn() };
+    const artistsService = { findOrCreate: vi.fn().mockResolvedValue('artist-id') };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SongsController],
       providers: [
         { provide: SongsService, useValue: songsService },
         { provide: AcoustIdService, useValue: acoustIdService },
+        { provide: ArtistsService, useValue: artistsService },
       ],
     }).compile();
 

@@ -5,9 +5,10 @@ import { TbPlaylist } from "react-icons/tb";
 import { IoMusicalNotes } from "react-icons/io5";
 
 import { fetchPlaylists, setTrack, setQueue } from '../store/playerSlice';
-import { setSongFilter, fetchFilterOptions, fetchLikedSongs, fetchFilteredSongs } from '../store/songSlice';
+import { setSongFilter, fetchLikedSongs, fetchFilteredSongs } from '../store/songSlice';
 import { fetchSelectedPlaylist, setSelectedPlaylist } from '../store/playerSlice';
-import { RootState } from '../store/store';
+import { fetchArtists, fetchFollowedArtists, setSelectedArtistId } from '../store/artistSlice';
+import { RootState, AppDispatch } from '../store/store';
 import { useContextMenu } from './ContextMenu/useContextMenu';
 
 export function groupByLetter<T>(items: T[], getLabel: (item: T) => string): { letter: string; items: T[] }[] {
@@ -41,45 +42,42 @@ const pills = [
 ];
 
 export default function Sidebar() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const playlists = useSelector((state: RootState) => state.player.playlists);
   const selectedPlaylistId = useSelector((state: RootState) => state.player.selectedPlaylistId);
-  const filterOptions = useSelector((state: RootState) => state.songs.filterOptions);
   const songs = useSelector((state: RootState) => state.songs.songs);
   const currentTrack = useSelector((state: RootState) => state.player.currentTrack);
+  const artists = useSelector((state: RootState) => state.artists.artists);
+  const selectedArtistId = useSelector((state: RootState) => state.artists.selectedArtistId);
   const [selectedPill, setSelectedPill] = useState('playlist');
-  const [selectedOption, setSelectedOption] = useState('');
 
   const { showContextMenu } = useContextMenu();
 
   useEffect(() => {
     dispatch(fetchPlaylists());
     dispatch(fetchLikedSongs());
+    dispatch(fetchFollowedArtists());
   }, [dispatch]);
 
   useEffect(() => {
     if (selectedPill === 'artist') {
-      dispatch(fetchFilterOptions(selectedPill));
+      dispatch(fetchArtists());
     }
     if (selectedPill === 'all') {
       dispatch(fetchFilteredSongs({ type: 'all', value: '' }));
     }
   }, [dispatch, selectedPill]);
 
-  // Handle pill selection
   const handlePillClick = (pill: string) => {
     setSelectedPill(pill);
-    setSelectedOption('');
-    if (pill !== 'playlist') {
-      dispatch(setSelectedPlaylist(null));
-    }
+    if (pill !== 'playlist') dispatch(setSelectedPlaylist(null));
+    if (pill !== 'artist') dispatch(setSelectedArtistId(null));
     dispatch(setSongFilter({ type: pill, value: '' }));
   };
 
-  // Handle filter option selection (artist/genre)
-  const handleOptionClick = (option: string) => {
-    setSelectedOption(option);
-    dispatch(setSongFilter({ type: selectedPill, value: option }));
+  const handleArtistClick = (artist: { id: string; name: string }) => {
+    dispatch(setSelectedArtistId(artist.id));
+    dispatch(setSongFilter({ type: 'artist', value: artist.name }));
   };
 
   // Handle playlist selection
@@ -165,33 +163,42 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Filter options (artist) */}
+      {/* Artists */}
       {selectedPill === 'artist' && (
         <div className="flex flex-col overflow-y-auto flex-1">
           <div className="text-silver mb-2 text-xs uppercase shrink-0">Artists</div>
-          {groupByLetter([...(filterOptions[selectedPill] ?? [])], a => a).map(({ letter, items: group }) => (
+          {groupByLetter(artists, a => a.name).map(({ letter, items: group }) => (
             <div key={letter}>
               <LetterDivider letter={letter} />
               <div className="flex flex-col gap-1 mb-1">
-                {group.map((option: string) => (
+                {group.map(artist => (
                   <button
-                    key={option}
+                    key={artist.id}
                     className={`flex items-center text-left px-3 py-2 h-12 rounded transition ${
-                      selectedOption === option
+                      selectedArtistId === artist.id
                         ? 'bg-amethyst text-moon'
                         : 'bg-shadow text-silver hover:bg-amethyst/40'
                     }`}
-                    onClick={() => handleOptionClick(option)}
+                    onClick={() => handleArtistClick(artist)}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 shrink-0 ${
-                        selectedOption === option ? 'bg-white/20' : 'bg-white/10'
+                      className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 shrink-0 overflow-hidden ${
+                        selectedArtistId === artist.id ? 'bg-white/20' : 'bg-white/10'
                       }`}
                       aria-hidden="true"
                     >
-                      <IoMusicalNotes size={16} />
+                      {artist.imageUrl ? (
+                        <img src={artist.imageUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <IoMusicalNotes size={16} />
+                      )}
                     </div>
-                    <span className="truncate">{option}</span>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{artist.name}</div>
+                      <div className={`truncate text-xs ${selectedArtistId === artist.id ? 'text-moon/70' : 'text-gray-500'}`}>
+                        {artist._count.songs} {artist._count.songs === 1 ? 'song' : 'songs'}
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>

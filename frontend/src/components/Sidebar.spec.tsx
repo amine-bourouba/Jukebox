@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from '../store/playerSlice';
 import songsReducer from '../store/songSlice';
+import artistReducer from '../store/artistSlice';
 
 // Mock ContextMenu hook
 const mockShowContextMenu = vi.fn();
@@ -23,9 +24,18 @@ vi.mock('../services/api', () => ({
 
 import Sidebar, { groupByLetter } from './Sidebar';
 
-function createStore(playlists: any[] = [], filterOptions: any = {}, songs: any[] = [], currentTrack: any = null) {
+/** Convert an array of artist name strings to Artist entities for the artists slice */
+function makeArtists(names: string[]) {
+  return names.map((name, i) => ({ id: `artist-${i}`, name, _count: { songs: 1, followers: 0 } }));
+}
+
+function createStore(playlists: any[] = [], filterOptions: any = {}, songs: any[] = [], currentTrack: any = null, artistEntities: any[] = []) {
+  // If filterOptions has artist strings, convert them to entities for the artists slice
+  const artistNames: string[] = filterOptions?.artist ?? [];
+  const artists = artistEntities.length ? artistEntities : makeArtists(artistNames);
+
   return configureStore({
-    reducer: { player: playerReducer, songs: songsReducer },
+    reducer: { player: playerReducer, songs: songsReducer, artists: artistReducer },
     preloadedState: {
       player: {
         currentTrack,
@@ -41,6 +51,12 @@ function createStore(playlists: any[] = [], filterOptions: any = {}, songs: any[
         filter: { type: 'all', value: '' },
         songs,
         likedSongIds: [],
+      },
+      artists: {
+        artists,
+        selectedArtistId: null,
+        followedArtistIds: [],
+        loading: false,
       },
     },
   });
@@ -189,11 +205,13 @@ describe('Sidebar', () => {
 
   it('should apply active styles to selected artist', () => {
     const filterOptions = { artist: ['Drake', 'Adele'] };
-    renderSidebar([], filterOptions);
+    const { store } = renderSidebar([], filterOptions);
 
     fireEvent.click(screen.getByText('Artist'));
-    fireEvent.click(screen.getByText('Drake'));
+    fireEvent.click(screen.getByText('Drake').closest('button')!);
 
+    // After click, the selected artist id should be set
+    expect(store.getState().artists.selectedArtistId).toBeTruthy();
     const drakeBtn = screen.getByText('Drake').closest('button')!;
     expect(drakeBtn.className).toContain('bg-amethyst');
   });

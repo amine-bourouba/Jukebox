@@ -1,21 +1,45 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import ArtistHero from './ArtistHeader';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import artistReducer from '../../../store/artistSlice';
+import ArtistHeader from './ArtistHeader';
 
-function renderHero(overrides: Partial<Parameters<typeof ArtistHero>[0]> = {}) {
+function makeStore(followedIds: string[] = []) {
+  return configureStore({
+    reducer: { artists: artistReducer },
+    preloadedState: {
+      artists: {
+        artists: [],
+        selectedArtistId: null,
+        followedArtistIds: followedIds,
+        loading: false,
+      },
+    },
+  });
+}
+
+const defaultArtist = { id: 'a1', name: 'Queen', _count: { songs: 12, followers: 4 } };
+
+function renderHero(overrides: Partial<Parameters<typeof ArtistHeader>[0]> = {}, followedIds: string[] = []) {
+  const store = makeStore(followedIds);
   const props = {
-    artistName: 'Queen',
+    artist: defaultArtist,
     songCount: 12,
     onPlay: vi.fn(),
     onShuffle: vi.fn(),
     ...overrides,
   };
-  return { ...render(<ArtistHero {...props} />), props };
+  return {
+    store,
+    props,
+    ...render(<Provider store={store}><ArtistHeader {...props} /></Provider>),
+  };
 }
 
 describe('ArtistHero', () => {
   it('renders the artist name', () => {
-    renderHero({ artistName: 'Radiohead' });
+    renderHero({ artist: { ...defaultArtist, name: 'Radiohead' } });
     expect(screen.getByText('Radiohead')).toBeInTheDocument();
   });
 
@@ -26,17 +50,17 @@ describe('ArtistHero', () => {
 
   it('renders song count as plural when count > 1', () => {
     renderHero({ songCount: 5 });
-    expect(screen.getByText('5 songs')).toBeInTheDocument();
+    expect(screen.getByText(/5 songs/)).toBeInTheDocument();
   });
 
   it('renders song count as singular when count is 1', () => {
     renderHero({ songCount: 1 });
-    expect(screen.getByText('1 song')).toBeInTheDocument();
+    expect(screen.getByText(/1 song/)).toBeInTheDocument();
   });
 
   it('renders song count as plural when count is 0', () => {
     renderHero({ songCount: 0 });
-    expect(screen.getByText('0 songs')).toBeInTheDocument();
+    expect(screen.getByText(/0 songs/)).toBeInTheDocument();
   });
 
   it('renders play button with correct aria-label', () => {
@@ -71,5 +95,38 @@ describe('ArtistHero', () => {
     const { props } = renderHero();
     fireEvent.click(screen.getByRole('button', { name: 'Shuffle songs' }));
     expect(props.onPlay).not.toHaveBeenCalled();
+  });
+
+  it('shows Follow button when artist is not followed', () => {
+    renderHero();
+    expect(screen.getByRole('button', { name: 'Follow artist' })).toBeInTheDocument();
+    expect(screen.getByText('Follow')).toBeInTheDocument();
+  });
+
+  it('shows Following button when artist is already followed', () => {
+    renderHero({}, ['a1']);
+    expect(screen.getByText('Following')).toBeInTheDocument();
+  });
+
+  it('shows follower count when > 0', () => {
+    renderHero({ artist: { ...defaultArtist, _count: { songs: 5, followers: 42 } } });
+    expect(screen.getByText(/42 followers/)).toBeInTheDocument();
+  });
+
+  it('hides follower count when 0', () => {
+    renderHero({ artist: { ...defaultArtist, _count: { songs: 5, followers: 0 } } });
+    expect(screen.queryByText(/follower/)).not.toBeInTheDocument();
+  });
+
+  it('shows placeholder icon when artist has no imageUrl', () => {
+    renderHero({ artist: { ...defaultArtist, imageUrl: undefined } });
+    expect(document.querySelector('img')).toBeNull();
+  });
+
+  it('renders artist image when imageUrl is set', () => {
+    renderHero({ artist: { ...defaultArtist, imageUrl: '/artist.jpg' } });
+    const img = document.querySelector('img') as HTMLImageElement;
+    expect(img).toBeTruthy();
+    expect(img.src).toContain('/artist.jpg');
   });
 });

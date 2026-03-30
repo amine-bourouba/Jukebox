@@ -1,28 +1,52 @@
+import { useDispatch, useSelector } from 'react-redux';
 import { MdPlayArrow, MdShuffle } from 'react-icons/md';
 import { IoPersonCircleOutline } from 'react-icons/io5';
 
-interface ArtistHeroProps {
-  artistName: string;
+import { AppDispatch, RootState } from '../../../store/store';
+import { followArtist, unfollowArtist } from '../../../store/artistSlice';
+import type { Artist } from '../../../store/artistSlice';
+
+interface ArtistHeaderProps {
+  artist: Artist | null;
   songCount: number;
   onPlay: () => void;
   onShuffle: () => void;
 }
 
-export default function ArtistHero({ artistName, songCount, onPlay, onShuffle }: ArtistHeroProps) {
+export default function ArtistHeader({ artist, songCount, onPlay, onShuffle }: ArtistHeaderProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const followedIds = useSelector((state: RootState) => state.artists.followedArtistIds);
+  const isFollowing = artist ? followedIds.includes(artist.id) : false;
+
+  const handleFollow = () => {
+    if (!artist) return;
+    if (isFollowing) dispatch(unfollowArtist(artist.id));
+    else dispatch(followArtist(artist.id));
+  };
+
+  const followerCount = artist?._count?.followers ?? 0;
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 flex-shrink-0 pb-6">
       <div className="flex items-end gap-6">
-        {/* Avatar placeholder — replaced with real image in Phase 3 */}
-        <div className="shrink-0 w-44 h-44 rounded-full bg-shadow/80 flex items-center justify-center text-amethyst shadow-2xl">
-          <IoPersonCircleOutline size={120} />
+        {/* Avatar */}
+        <div className="shrink-0 w-44 h-44 rounded-full bg-shadow/80 flex items-center justify-center text-amethyst shadow-2xl overflow-hidden">
+          {artist?.imageUrl ? (
+            <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover" />
+          ) : (
+            <IoPersonCircleOutline size={120} />
+          )}
         </div>
 
-        {/* Artist info + actions */}
+        {/* Info + actions */}
         <div className="flex flex-col gap-2 pb-2">
           <p className="text-xs font-bold text-white uppercase tracking-widest">Artist</p>
-          <h1 className="text-6xl font-extrabold text-white leading-tight">{artistName}</h1>
+          <h1 className="text-6xl font-extrabold text-white leading-tight">{artist?.name ?? ''}</h1>
           <p className="text-silver text-sm">
             {songCount} {songCount === 1 ? 'song' : 'songs'}
+            {followerCount > 0 && (
+              <span className="ml-3">{followerCount.toLocaleString()} {followerCount === 1 ? 'follower' : 'followers'}</span>
+            )}
           </p>
           <div className="flex items-center gap-4 mt-2">
             <button
@@ -39,6 +63,19 @@ export default function ArtistHero({ artistName, songCount, onPlay, onShuffle }:
             >
               <MdShuffle size={28} />
             </button>
+            {artist && (
+              <button
+                onClick={handleFollow}
+                aria-label={isFollowing ? 'Unfollow artist' : 'Follow artist'}
+                className={`px-4 py-1.5 rounded-full border text-sm font-semibold transition-colors ${
+                  isFollowing
+                    ? 'border-silver text-silver hover:border-moon hover:text-moon'
+                    : 'border-amethyst text-amethyst hover:bg-amethyst hover:text-moon'
+                }`}
+              >
+                {isFollowing ? 'Following' : 'Follow'}
+              </button>
+            )}
           </div>
         </div>
       </div>

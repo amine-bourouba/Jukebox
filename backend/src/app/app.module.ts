@@ -13,6 +13,7 @@ import { SearchModule } from '../modules/search/search.module';
 import { RecommendationsModule } from '../modules/recommendations/recommendations.module';
 import { MediaModule } from '../modules/media/media.module';
 import { AnalyticsModule } from '../modules/analytics/analytics.module';
+import { ArtistsModule } from '../modules/artists/artists.module';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../modules/auth/auth.service';
@@ -34,7 +35,8 @@ import { JwtAuthGuard } from '../modules/auth/jwt-auth.guard';
     SearchModule,
     RecommendationsModule,
     MediaModule,
-    AnalyticsModule
+    AnalyticsModule,
+    ArtistsModule
   ],
   controllers: [AppController],
   providers: [

@@ -1,21 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from '../../../store/playerSlice';
 import songsReducer from '../../../store/songSlice';
+import artistReducer from '../../../store/artistSlice';
 import { groupByAlbum } from './ArtistView';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
+
+import api from '../../../services/api';
 
 vi.mock('../../../services/api', () => ({
   default: { get: vi.fn().mockResolvedValue({ data: [] }) },
 }));
 
+const mockApi = api as unknown as { get: ReturnType<typeof vi.fn> };
+const mockApiSongs = (songs: any[]) => mockApi.get.mockResolvedValue({ data: songs });
+
 vi.mock('./ArtistHeader', () => ({
-  default: ({ artistName, songCount, onPlay, onShuffle }: any) => (
+  default: ({ artist, songCount, onPlay, onShuffle }: any) => (
     <div data-testid="artist-hero">
-      <span data-testid="hero-name">{artistName}</span>
+      <span data-testid="hero-name">{artist?.name ?? ''}</span>
       <span data-testid="hero-count">{songCount}</span>
       <button data-testid="btn-play-all" onClick={onPlay}>Play All</button>
       <button data-testid="btn-shuffle" onClick={onShuffle}>Shuffle</button>
@@ -66,9 +72,11 @@ function makeSong(id: string, title: string, album?: string, coverImageUrl?: str
   };
 }
 
-function createStore(songs: any[] = [], artistName = 'Queen') {
+const QUEEN_ID = 'artist-queen';
+
+function createStore(songs: any[] = [], selectedArtistId = QUEEN_ID) {
   return configureStore({
-    reducer: { player: playerReducer, songs: songsReducer },
+    reducer: { player: playerReducer, songs: songsReducer, artists: artistReducer },
     preloadedState: {
       player: {
         currentTrack: null,
@@ -81,9 +89,15 @@ function createStore(songs: any[] = [], artistName = 'Queen') {
       },
       songs: {
         filterOptions: { artist: [] },
-        filter: { type: 'artist', value: artistName },
+        filter: { type: 'artist', value: 'Queen' },
         songs,
         likedSongIds: [],
+      },
+      artists: {
+        artists: [{ id: QUEEN_ID, name: 'Queen', _count: { songs: songs.length, followers: 0 } }],
+        selectedArtistId,
+        followedArtistIds: [],
+        loading: false,
       },
     },
   });
@@ -174,87 +188,94 @@ describe('groupByAlbum', () => {
 // ── ArtistView component tests ───────────────────────────────────────────────
 
 describe('ArtistView', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockApiSongs([]);
+  });
 
   it('renders ArtistHeader with correct artist name', () => {
-    const store = createStore([], 'Radiohead');
-    render(<Provider store={store}><ArtistView /></Provider>);
+    const store = createStore('artist-radiohead');
+    // Override the artists list with Radiohead
+    const s = configureStore({
+      reducer: { player: playerReducer, songs: songsReducer, artists: artistReducer },
+      preloadedState: {
+        player: { currentTrack: null, queue: [], repeat: 'off' as const, shuffle: false, playlists: [], selectedPlaylistId: null, selectedPlaylist: null },
+        songs: { filterOptions: { artist: [] }, filter: { type: 'artist', value: 'Radiohead' }, songs: [], likedSongIds: [] },
+        artists: { artists: [{ id: 'artist-radiohead', name: 'Radiohead', _count: { songs: 0, followers: 0 } }], selectedArtistId: 'artist-radiohead', followedArtistIds: [], loading: false },
+      },
+    });
+    render(<Provider store={s}><ArtistView /></Provider>);
     expect(screen.getByTestId('hero-name').textContent).toBe('Radiohead');
   });
 
-  it('passes correct song count to ArtistHeader', () => {
+  it('passes correct song count to ArtistHeader', async () => {
     const songs = [makeSong('s1', 'T1', 'A'), makeSong('s2', 'T2', 'A')];
-    const store = createStore(songs);
+    mockApiSongs(songs);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-    expect(screen.getByTestId('hero-count').textContent).toBe('2');
+    await waitFor(() => expect(screen.getByTestId('hero-count').textContent).toBe('2'));
   });
 
-  it('renders an AlbumCard for each distinct album', () => {
-    const songs = [
-      makeSong('s1', 'T1', 'Album A'),
-      makeSong('s2', 'T2', 'Album B'),
-      makeSong('s3', 'T3', 'Album A'),
-    ];
-    const store = createStore(songs);
+  it('renders an AlbumCard for each distinct album', async () => {
+    const songs = [makeSong('s1', 'T1', 'Album A'), makeSong('s2', 'T2', 'Album B'), makeSong('s3', 'T3', 'Album A')];
+    mockApiSongs(songs);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-    expect(screen.getByTestId('card-Album A')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('card-Album A')).toBeInTheDocument());
     expect(screen.getByTestId('card-Album B')).toBeInTheDocument();
   });
 
-  it('renders a "Singles" card for songs with no album', () => {
-    const store = createStore([makeSong('s1', 'Solo Track')]);
+  it('renders a "Singles" card for songs with no album', async () => {
+    mockApiSongs([makeSong('s1', 'Solo Track')]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-    expect(screen.getByTestId('card-Singles')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('card-Singles')).toBeInTheDocument());
   });
 
-  it('passes coverUrl to the AlbumCard', () => {
-    const songs = [makeSong('s1', 'T1', 'Album A', '/cover.jpg')];
-    const store = createStore(songs);
+  it('passes coverUrl to the AlbumCard', async () => {
+    mockApiSongs([makeSong('s1', 'T1', 'Album A', '/cover.jpg')]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-    expect(screen.getByTestId('card-Album A').getAttribute('data-cover')).toBe('/cover.jpg');
+    await waitFor(() => expect(screen.getByTestId('card-Album A').getAttribute('data-cover')).toBe('/cover.jpg'));
   });
 
-  it('shows album song list when a card is clicked', () => {
-    const songs = [makeSong('s1', 'Track One', 'Debut')];
-    const store = createStore(songs);
+  it('shows album song list when a card is clicked', async () => {
+    mockApiSongs([makeSong('s1', 'Track One', 'Debut')]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-
+    await waitFor(() => screen.getByTestId('card-Debut'));
     fireEvent.click(screen.getByTestId('card-Debut'));
-
     expect(screen.getByTestId('song-row-s1')).toBeInTheDocument();
     expect(screen.queryByTestId('card-Debut')).toBeNull();
   });
 
-  it('shows album name and song count in detail view heading', () => {
-    const songs = [makeSong('s1', 'T1', 'Debut'), makeSong('s2', 'T2', 'Debut')];
-    const store = createStore(songs);
+  it('shows album name and song count in detail view heading', async () => {
+    mockApiSongs([makeSong('s1', 'T1', 'Debut'), makeSong('s2', 'T2', 'Debut')]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-
+    await waitFor(() => screen.getByTestId('card-Debut'));
     fireEvent.click(screen.getByTestId('card-Debut'));
-
     expect(screen.getByText('Debut')).toBeInTheDocument();
     expect(screen.getByText('2 songs')).toBeInTheDocument();
   });
 
-  it('returns to card grid when Back is clicked', () => {
-    const songs = [makeSong('s1', 'T1', 'Debut')];
-    const store = createStore(songs);
+  it('returns to card grid when Back is clicked', async () => {
+    mockApiSongs([makeSong('s1', 'T1', 'Debut')]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-
+    await waitFor(() => screen.getByTestId('card-Debut'));
     fireEvent.click(screen.getByTestId('card-Debut'));
-    expect(screen.queryByTestId('card-Debut')).toBeNull();
-
     fireEvent.click(screen.getByLabelText('Back to discography'));
     expect(screen.getByTestId('card-Debut')).toBeInTheDocument();
   });
 
-  it('dispatches setQueue and setTrack (shuffle=false) when Play All is clicked', () => {
+  it('dispatches setQueue and setTrack (shuffle=false) when Play All is clicked', async () => {
     const songs = [makeSong('s1', 'T1', 'A'), makeSong('s2', 'T2', 'A')];
-    const store = createStore(songs);
+    mockApiSongs(songs);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-
+    await waitFor(() => expect(screen.getByTestId('hero-count').textContent).toBe('2'));
     fireEvent.click(screen.getByTestId('btn-play-all'));
-
     const state = store.getState().player;
     expect(state.shuffle).toBe(false);
     expect(state.queue).toHaveLength(2);
@@ -262,19 +283,20 @@ describe('ArtistView', () => {
   });
 
   it('does nothing when Play All is clicked with no songs', () => {
-    const store = createStore([]);
+    mockApiSongs([]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
     fireEvent.click(screen.getByTestId('btn-play-all'));
     expect(store.getState().player.currentTrack).toBeNull();
   });
 
-  it('dispatches setShuffle(true) and plays when Shuffle is clicked', () => {
+  it('dispatches setShuffle(true) and plays when Shuffle is clicked', async () => {
     const songs = [makeSong('s1', 'T1', 'A'), makeSong('s2', 'T2', 'B')];
-    const store = createStore(songs);
+    mockApiSongs(songs);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-
+    await waitFor(() => expect(screen.getByTestId('hero-count').textContent).toBe('2'));
     fireEvent.click(screen.getByTestId('btn-shuffle'));
-
     const state = store.getState().player;
     expect(state.shuffle).toBe(true);
     expect(state.queue).toHaveLength(2);
@@ -282,37 +304,34 @@ describe('ArtistView', () => {
   });
 
   it('does nothing when Shuffle is clicked with no songs', () => {
-    const store = createStore([]);
+    mockApiSongs([]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
     fireEvent.click(screen.getByTestId('btn-shuffle'));
     expect(store.getState().player.currentTrack).toBeNull();
   });
 
-  it('queues the album songs (not all artist songs) when a song is played from detail view', () => {
-    const songs = [
-      makeSong('s1', 'Album A Track', 'Album A'),
-      makeSong('s2', 'Album B Track', 'Album B'),
-    ];
-    const store = createStore(songs);
+  it('queues only album songs when a song is played from detail view', async () => {
+    const songs = [makeSong('s1', 'Album A Track', 'Album A'), makeSong('s2', 'Album B Track', 'Album B')];
+    mockApiSongs(songs);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-
+    await waitFor(() => screen.getByTestId('card-Album A'));
     fireEvent.click(screen.getByTestId('card-Album A'));
     fireEvent.click(screen.getByTestId('play-song-s1'));
-
     const state = store.getState().player;
     expect(state.currentTrack?.id).toBe('s1');
-    // Only Album A's songs in the queue
     expect(state.queue).toHaveLength(1);
     expect(state.queue[0].id).toBe('s1');
   });
 
-  it('normalises coverUrl from coverImageUrl when playing', () => {
+  it('normalises coverUrl from coverImageUrl when playing', async () => {
     const song = { ...makeSong('s1', 'T1', 'A'), coverImageUrl: '/cover.jpg' };
-    const store = createStore([song]);
+    mockApiSongs([song]);
+    const store = createStore();
     render(<Provider store={store}><ArtistView /></Provider>);
-
+    await waitFor(() => expect(screen.getByTestId('hero-count').textContent).toBe('1'));
     fireEvent.click(screen.getByTestId('btn-play-all'));
-
     const track = store.getState().player.currentTrack as any;
     expect(track.coverUrl).toBe('/cover.jpg');
   });
