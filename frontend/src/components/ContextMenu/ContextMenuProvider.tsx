@@ -209,6 +209,79 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
           },
         ];
 
+      case 'now-playing':
+        const nowPlayingSubmenuItems = [
+          {
+            id: 'new-playlist',
+            label: 'Create New Playlist',
+            icon: MdFolder,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => showCreatePlaylist(),
+          },
+          { id: 'separator', label: '', separator: true },
+          ...userPlaylists!.map((playlist: any) => ({
+            id: `playlist-${playlist.id}`,
+            label: playlist.name || playlist.title,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => dispatch(addSongToPlaylist({ playlistId: playlist.id, songId: data.song?.id })),
+          }))
+        ];
+
+        return [
+          {
+            id: 'queue',
+            label: 'Add to Queue',
+            icon: MdQueueMusic,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => dispatch(addToQueue(data.song)),
+          },
+          {
+            id: 'playlist',
+            label: 'Add to Playlist',
+            icon: MdPlaylistAdd,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            submenu: nowPlayingSubmenuItems,
+          },
+          {
+            id: 'like',
+            label: likedSongIds.includes(data.song?.id) ? 'Unlike Song' : 'Like Song',
+            icon: likedSongIds.includes(data.song?.id) ? MdFavorite : MdFavoriteBorder,
+            color: likedSongIds.includes(data.song?.id) ? 'text-red-400' : 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => likedSongIds.includes(data.song?.id)
+              ? dispatch(unlikeSong(data.song?.id))
+              : dispatch(likeSong(data.song?.id)),
+          },
+          {
+            id: 'edit',
+            label: 'Edit Details',
+            icon: MdEdit,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => showEditSong(data.song),
+          },
+          {
+            id: 'download',
+            label: 'Download Song',
+            icon: MdDownload,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => dispatch(downloadSong(data.song)),
+          },
+          {
+            id: 'delete',
+            label: 'Delete song file',
+            icon: MdDelete,
+            color: 'text-red-400',
+            hoverColor: 'hover:bg-red-500/10',
+            onClick: () => dispatch(deleteSong(data.song.id)),
+          },
+        ];
+
       case 'sidebar-playlist':
         return [
           {
