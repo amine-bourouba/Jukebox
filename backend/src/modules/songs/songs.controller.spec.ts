@@ -5,6 +5,7 @@ import { SongsController } from './songs.controller';
 import { SongsService } from './songs.service';
 import { AcoustIdService } from './acoustid.service';
 import { ArtistsService } from '../artists/artists.service';
+import { AlbumsService } from '../albums/albums.service';
 
 describe('SongsController', () => {
   let controller: SongsController;
@@ -28,6 +29,7 @@ describe('SongsController', () => {
 
     const acoustIdService = { lookup: vi.fn(), fingerprint: vi.fn() };
     const artistsService = { findOrCreate: vi.fn().mockResolvedValue('artist-id') };
+    const albumsService = { findOrCreate: vi.fn().mockResolvedValue('album-id') };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SongsController],
@@ -35,6 +37,7 @@ describe('SongsController', () => {
         { provide: SongsService, useValue: songsService },
         { provide: AcoustIdService, useValue: acoustIdService },
         { provide: ArtistsService, useValue: artistsService },
+        { provide: AlbumsService, useValue: albumsService },
       ],
     }).compile();
 
