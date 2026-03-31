@@ -194,13 +194,14 @@ describe('ContextMenuProvider', () => {
     expect(Object.keys(result.current.state.submenuStates)).toHaveLength(0);
   });
 
-  it('should return playlist-song menu items', () => {
+  it('should return playlist-song menu items including remove when playlistId present', () => {
     const playlists = [{ id: 'p1', title: 'My Playlist' }];
     const { result } = renderHook(() => useContextMenuFromProvider(), {
       wrapper: createWrapper(playlists),
     });
 
     const items = result.current.getMenuItems('playlist-song', {
+      playlistId: 'p1',
       song: { id: 's1', title: 'Test Song' },
     });
 
@@ -210,6 +211,21 @@ describe('ContextMenuProvider', () => {
     expect(ids).toContain('playlist');
     expect(ids).toContain('remove');
     expect(ids).toContain('download');
+    expect(ids).toContain('delete');
+  });
+
+  it('should omit remove from playlist when no playlistId (all-songs view)', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Test Song' },
+    });
+
+    const ids = items.map((i: any) => i.id);
+    expect(ids).not.toContain('remove');
+    expect(ids).toContain('queue');
     expect(ids).toContain('delete');
   });
 

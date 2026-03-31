@@ -164,7 +164,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             hoverColor: 'hover:bg-amethyst/20',
             submenu: playlistSubmenuItems,
           },
-          {
+          ...(data.playlistId ? [{
             id: 'remove',
             label: 'Remove from Playlist',
             icon: MdOutlineCancel,
@@ -172,7 +172,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             hoverColor: 'hover:bg-amethyst/20',
             onClick: () => dispatch(removeSongFromPlaylist({ playlistId: data.playlistId, songId: data.song?.id })),
             separator: true,
-          },
+          }] : []),
           {
             id: 'share',
             label: 'Share Song link',
