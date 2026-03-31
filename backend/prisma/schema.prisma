@@ -49,6 +49,7 @@ model Song {
   artist        String
   artistId      String?
   album         String?
+  albumId       String?
   coverImageUrl String?
   duration      Int?
   explicit      Boolean        @default(false)
@@ -60,9 +61,25 @@ model Song {
   updatedAt     DateTime       @updatedAt
   owner         User           @relation(fields: [ownerId], references: [id])
   artistEntity  Artist?        @relation(fields: [artistId], references: [id])
+  albumEntity   Album?         @relation(fields: [albumId], references: [id])
   comments      Comment[]
   songLikes     SongLike[]
   playlistSongs PlaylistSong[]
+}
+
+model Album {
+  id            String   @id @default(uuid())
+  title         String
+  artistId      String
+  coverImageUrl String?
+  releaseYear   Int?
+  type          String   @default("Album")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  artist        Artist   @relation(fields: [artistId], references: [id])
+  songs         Song[]
+
+  @@unique([title, artistId])
 }
 
 model Artist {
@@ -75,6 +92,7 @@ model Artist {
   updatedAt   DateTime      @updatedAt
   owner       User          @relation(fields: [ownerId], references: [id])
   songs       Song[]
+  albums      Album[]
   followers   ArtistFollow[]
 
   @@unique([name, ownerId])

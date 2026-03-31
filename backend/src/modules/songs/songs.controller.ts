@@ -11,6 +11,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { AcoustIdService } from './acoustid.service';
 import { ArtistsService } from '../artists/artists.service';
+import { AlbumsService } from '../albums/albums.service';
 import { SongsService } from './songs.service';
 import { CreateSongDto } from './dto/create-song.dto';
 import { UpdateSongDto } from './dto/update-song.dto';
@@ -56,6 +57,7 @@ export class SongsController {
     private readonly songsService: SongsService,
     private readonly acoustIdService: AcoustIdService,
     private readonly artistsService: ArtistsService,
+    private readonly albumsService: AlbumsService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -179,6 +181,15 @@ export class SongsController {
       // 4. Auto-link Artist entity if we have an artist name
       if (finalData.artist) {
         finalData.artistId = await this.artistsService.findOrCreate(req.user.userId, finalData.artist);
+      }
+
+      // 5. Auto-link Album entity if we have both an artist and album name
+      if (finalData.artistId && finalData.album) {
+        finalData.albumId = await this.albumsService.findOrCreate(
+          finalData.artistId,
+          finalData.album,
+          thumbnailFile?.path ? `uploads/thumbnails/${thumbnailFile.filename}` : undefined,
+        );
       }
 
       return await this.songsService.createSongWithUpload(
