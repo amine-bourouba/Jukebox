@@ -11,6 +11,7 @@ import AlbumCard from './AlbumCard';
 import SongListItem from './SongListItem';
 import type { PlaylistSongShape } from './AlbumSection';
 import api from '../../../services/api';
+import { useImageColor } from '../../../hooks/useImageColor';
 
 export interface AlbumGroup {
   albumName: string;
@@ -69,6 +70,8 @@ export default function ArtistView() {
     state.artists.artists.find(a => a.id === selectedArtistId) ?? null
   );
 
+  const accentColor = useImageColor(artist?.imageUrl);
+
   const [songs, setSongs] = useState<any[]>([]);
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
 
@@ -110,8 +113,15 @@ export default function ArtistView() {
     [dispatch]
   );
 
+  const headerGradient = accentColor
+    ? { background: `linear-gradient(to bottom, ${accentColor}44 0%, transparent 45%)` }
+    : undefined;
+
   return (
-    <div className="flex flex-col h-full overflow-hidden pt-8">
+    <div
+      className="flex flex-col h-full overflow-hidden pt-8 transition-[background] duration-700"
+      style={headerGradient}
+    >
       <ArtistHeader
         artist={artist}
         songCount={songs.length}
