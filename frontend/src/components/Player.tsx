@@ -2,7 +2,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useState, useCallback, useEffect } from 'react';
 
 import { RootState } from '../store/store';
-import { setTrack, setRepeat, setShuffle } from '../store/playerSlice';
+import { setTrack, setRepeat, setShuffle, toggleQueue } from '../store/playerSlice';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 
 import {
@@ -19,7 +19,7 @@ import {
 
 export default function Player() {
   const dispatch = useDispatch();
-  const { currentTrack, queue, repeat, shuffle } = useSelector((state: RootState) => state.player);
+  const { currentTrack, queue, repeat, shuffle, showQueue } = useSelector((state: RootState) => state.player);
   const token = useSelector((state: RootState) => state.auth.token);
   const streamUrl = `${import.meta.env.VITE_API_URL}/songs/${currentTrack?.id}/stream`;
 
@@ -191,7 +191,11 @@ export default function Player() {
             className="w-20 h-1 accent-amethyst"
           />
         </div>
-        <button className="text-silver hover:text-amethyst" title="Queue">
+        <button
+          onClick={() => dispatch(toggleQueue())}
+          className={`hover:text-amethyst transition-colors ${showQueue ? 'text-amethyst' : 'text-silver'}`}
+          title={showQueue ? 'Hide queue' : 'Show queue'}
+        >
           <MdQueueMusic size={28} />
         </button>
       </div>

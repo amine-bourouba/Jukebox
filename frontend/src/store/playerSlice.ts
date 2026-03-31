@@ -9,6 +9,7 @@ const initialState: PlayerState = {
   queue: [],
   repeat: 'off',
   shuffle: false,
+  showQueue: true,
   playlists: [],
   selectedPlaylistId: null,
   selectedPlaylist: null,
@@ -157,6 +158,9 @@ const playerSlice = createSlice({
     setSelectedPlaylist(state, action) {
       state.selectedPlaylistId = action.payload;
     },
+    toggleQueue(state) {
+      state.showQueue = !state.showQueue;
+    },
   },
   extraReducers: builder => {
     builder
@@ -199,5 +203,5 @@ const playerSlice = createSlice({
   }
 });
 
-export const { setTrack, clearTrack, setQueue, addToQueue, setRepeat, setShuffle, setSelectedPlaylist } = playerSlice.actions;
+export const { setTrack, clearTrack, setQueue, addToQueue, setRepeat, setShuffle, setSelectedPlaylist, toggleQueue } = playerSlice.actions;
 export default playerSlice.reducer;

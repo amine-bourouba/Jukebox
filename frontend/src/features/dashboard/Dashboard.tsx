@@ -8,7 +8,8 @@ import { RootState } from '../store/store';
 import { useSelector } from 'react-redux';
 
 export default function Dashboard() {
-  const { currentTrack } = useSelector((state: RootState) => state.player);
+  const { currentTrack, showQueue } = useSelector((state: RootState) => state.player);
+  const showPanel = !!currentTrack && showQueue;
 
   return (
     <div className="h-screen bg-gradient-to-br from-midnight via-sapphire to-amethyst flex flex-col overflow-hidden">
@@ -17,10 +18,10 @@ export default function Dashboard() {
         <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden min-h-0">
           <div className="flex-1 flex flex-row overflow-hidden min-h-0 pb-20">
-            <div className={`${currentTrack ? 'basis-3/4' : 'flex-1'} overflow-hidden`}>
+            <div className={`${showPanel ? 'basis-3/4' : 'flex-1'} overflow-hidden`}>
               <SongList />
             </div>
-            {currentTrack && (
+            {showPanel && (
               <div className="basis-1/4 overflow-hidden">
                 <SongPreview currentTrack={currentTrack} />
               </div>

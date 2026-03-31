@@ -37,6 +37,7 @@ function createStore(playerOverrides: any = {}) {
         queue: [],
         repeat: 'off',
         shuffle: false,
+        showQueue: true,
         playlists: [],
         selectedPlaylistId: null,
         selectedPlaylist: null,

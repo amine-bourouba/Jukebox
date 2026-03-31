@@ -23,6 +23,7 @@ export type PlayerState = {
   queue: Track[];
   repeat: 'off' | 'one' | 'all';
   shuffle: boolean;
+  showQueue: boolean;
   playlists?: any[];
   selectedPlaylistId: string | null;
   selectedPlaylist: null;

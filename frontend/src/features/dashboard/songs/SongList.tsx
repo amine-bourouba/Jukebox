@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchFilteredSongs } from '../../../store/songSlice';
-import { setTrack } from '../../../store/playerSlice';
+import { setTrack, setQueue } from '../../../store/playerSlice';
 import { RootState, AppDispatch } from '../../../store/store';
 import SongListElement from './SongListItem';
 import ArtistView from './ArtistView';
@@ -22,11 +22,23 @@ export default function SongList() {
   }, [dispatch, filter, selectedPlaylistId]);
 
 
+  const normaliseTrack = (s: any) => ({
+    ...s,
+    coverUrl: s.coverImageUrl || s.thumbnail || s.coverUrl || '',
+  });
+
   const handlePlaySong = (song: any) => {
-    dispatch(setTrack({
-      ...song,
-      coverUrl: song.coverImageUrl || song.thumbnail || song.coverUrl,
-    }));
+    const track = normaliseTrack(song);
+
+    let allTracks;
+    if (selectedPlaylistId && selectedPlaylist?.playlistSongs) {
+      allTracks = selectedPlaylist.playlistSongs.map((ps: any) => normaliseTrack(ps.song));
+    } else {
+      allTracks = songs.map(normaliseTrack);
+    }
+
+    dispatch(setQueue(allTracks));
+    dispatch(setTrack(track));
   };
 
   const isArtistView = filter.type === 'artist' && !!filter.value;
