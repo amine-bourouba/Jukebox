@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from '../../store/playerSlice';
 import songReducer from '../../store/songSlice';
+import artistReducer from '../../store/artistSlice';
 import { ContextMenuProvider } from './ContextMenuProvider';
 import ContextMenu from './ContextMenu';
 
@@ -26,7 +27,7 @@ vi.mock('../PlaylistModal', () => ({
 
 function createStore(playlists: any[] = []) {
   return configureStore({
-    reducer: { player: playerReducer, songs: songReducer },
+    reducer: { player: playerReducer, songs: songReducer, artists: artistReducer },
     preloadedState: {
       player: {
         currentTrack: null,
@@ -42,6 +43,12 @@ function createStore(playlists: any[] = []) {
         filter: { type: 'all', value: '' },
         songs: [],
         likedSongIds: [],
+      },
+      artists: {
+        artists: [],
+        selectedArtistId: null,
+        followedArtistIds: [],
+        loading: false,
       },
     },
   });

@@ -5,6 +5,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../store/authSlice';
 import playerReducer from '../store/playerSlice';
 import songsReducer from '../store/songSlice';
+import artistReducer from '../store/artistSlice';
 
 import App from './app';
 
@@ -14,6 +15,7 @@ function createTestStore() {
       auth: authReducer,
       player: playerReducer,
       songs: songsReducer,
+      artists: artistReducer,
     },
   });
 }

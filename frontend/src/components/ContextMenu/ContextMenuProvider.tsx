@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { 
-  MdPlaylistAdd, 
-  MdShare, 
-  MdEdit, 
+import {
+  MdPlaylistAdd,
+  MdShare,
+  MdEdit,
   MdDelete,
   MdPlayArrow,
   MdQueueMusic,
@@ -13,12 +13,14 @@ import {
   MdOutlineCancel,
   MdFavorite,
   MdFavoriteBorder,
+  MdPerson,
 } from 'react-icons/md';
 
 import { ContextMenuState, ContextMenuConfig, ContextMenuItem } from './types';
 import { RootState, AppDispatch } from '../../store/store';
 import { addSongToPlaylist, removeSongFromPlaylist, addToQueue, playPlaylist, deletePlaylist } from "../../store/playerSlice";
-import { downloadSong, deleteSong, likeSong, unlikeSong } from '../../store/songSlice';
+import { downloadSong, deleteSong, likeSong, unlikeSong, setSongFilter } from '../../store/songSlice';
+import { setSelectedArtistId } from '../../store/artistSlice';
 import { shareSongLink, sharePlaylistLink } from '../../services/share';
 import { useEditSong } from '../EditSongModal';
 import { usePlaylistModal } from '../PlaylistModal';
@@ -113,13 +115,19 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
   const [state, dispatchContext] = useReducer(contextMenuReducer, initialState);
   const userPlaylists = useSelector((state: RootState) => state.player.playlists);
   const likedSongIds = useSelector((state: RootState) => state.songs.likedSongIds);
+  const artists = useSelector((state: RootState) => state.artists.artists);
   const { showEditSong } = useEditSong();
   const { showCreatePlaylist, showEditPlaylist } = usePlaylistModal();
 
   const getMenuItems = useCallback((triggerType: string, data: any): ContextMenuItem[] => {
     
     switch (triggerType) {
-      case 'playlist-song':
+      case 'playlist-song': {
+        const songArtist = data.song?.artist ?? '';
+        const matchedArtist = artists.find(
+          a => a.name.toLowerCase() === songArtist.toLowerCase()
+        );
+
         const playlistSubmenuItems = [
           {
             id: 'new-playlist',
@@ -183,6 +191,17 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
               ? dispatch(unlikeSong(data.song?.id))
               : dispatch(likeSong(data.song?.id)),
           },
+          ...(matchedArtist ? [{
+            id: 'go-to-artist',
+            label: 'Go to artist',
+            icon: MdPerson,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => {
+              dispatch(setSelectedArtistId(matchedArtist.id));
+              dispatch(setSongFilter({ type: 'artist', value: songArtist }));
+            },
+          }] : []),
           {
             id: 'edit',
             label: 'Edit Details',
@@ -208,8 +227,14 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             onClick: () => dispatch(deleteSong(data.song.id)),
           },
         ];
+      }
 
-      case 'now-playing':
+      case 'now-playing': {
+        const nowPlayingArtist = data.song?.artist ?? '';
+        const nowPlayingArtistEntity = artists.find(
+          a => a.name.toLowerCase() === nowPlayingArtist.toLowerCase()
+        );
+
         const nowPlayingSubmenuItems = [
           {
             id: 'new-playlist',
@@ -256,6 +281,17 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
               ? dispatch(unlikeSong(data.song?.id))
               : dispatch(likeSong(data.song?.id)),
           },
+          ...(nowPlayingArtistEntity ? [{
+            id: 'go-to-artist',
+            label: 'Go to artist',
+            icon: MdPerson,
+            color: 'text-white',
+            hoverColor: 'hover:bg-amethyst/20',
+            onClick: () => {
+              dispatch(setSelectedArtistId(nowPlayingArtistEntity.id));
+              dispatch(setSongFilter({ type: 'artist', value: nowPlayingArtist }));
+            },
+          }] : []),
           {
             id: 'edit',
             label: 'Edit Details',
@@ -281,6 +317,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
             onClick: () => dispatch(deleteSong(data.song.id)),
           },
         ];
+      }
 
       case 'sidebar-playlist':
         return [
@@ -322,7 +359,7 @@ export function ContextMenuProvider({ children }: ContextMenuProviderProps) {
       default:
         return [];
     }
-  }, [userPlaylists, likedSongIds, dispatch, showEditSong, showCreatePlaylist, showEditPlaylist]);
+  }, [userPlaylists, likedSongIds, artists, dispatch, showEditSong, showCreatePlaylist, showEditPlaylist]);
 
   const showMenu = useCallback((
     x: number, 

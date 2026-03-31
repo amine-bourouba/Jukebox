@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from '../../store/playerSlice';
 import songReducer from '../../store/songSlice';
+import artistReducer from '../../store/artistSlice';
 import { ContextMenuProvider, useContextMenu as useContextMenuFromProvider } from './ContextMenuProvider';
 
 // Mock api
@@ -39,9 +40,9 @@ vi.mock('../PlaylistModal', () => ({
   usePlaylistModal: () => ({ showCreatePlaylist: mockShowCreatePlaylist, showEditPlaylist: mockShowEditPlaylist }),
 }));
 
-function createStore(playlists: any[] = [], likedSongIds: string[] = []) {
+function createStore(playlists: any[] = [], likedSongIds: string[] = [], artists: any[] = []) {
   return configureStore({
-    reducer: { player: playerReducer, songs: songReducer },
+    reducer: { player: playerReducer, songs: songReducer, artists: artistReducer },
     preloadedState: {
       player: {
         currentTrack: null,
@@ -58,12 +59,18 @@ function createStore(playlists: any[] = [], likedSongIds: string[] = []) {
         songs: [],
         likedSongIds,
       },
+      artists: {
+        artists,
+        selectedArtistId: null,
+        followedArtistIds: [],
+        loading: false,
+      },
     },
   });
 }
 
-function createWrapper(playlists: any[] = [], likedSongIds: string[] = []) {
-  const store = createStore(playlists, likedSongIds);
+function createWrapper(playlists: any[] = [], likedSongIds: string[] = [], artists: any[] = []) {
+  const store = createStore(playlists, likedSongIds, artists);
   return ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
       <ContextMenuProvider>{children}</ContextMenuProvider>
@@ -357,5 +364,98 @@ describe('ContextMenuProvider', () => {
 
     const ids = items.map((i: any) => i.id);
     expect(ids).toContain('like');
+  });
+
+  // ── Go to artist ──────────────────────────────────────────────────────────────
+
+  it('playlist-song: includes go-to-artist when artist matches', () => {
+    const artists = [{ id: 'a1', name: 'Led Zeppelin', _count: { songs: 0, followers: 0 } }];
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper([], [], artists),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Stairway to Heaven', artist: 'Led Zeppelin' },
+    });
+
+    const ids = items.map((i: any) => i.id);
+    expect(ids).toContain('go-to-artist');
+  });
+
+  it('playlist-song: omits go-to-artist when no matching artist', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Song', artist: 'Unknown Artist' },
+    });
+
+    const ids = items.map((i: any) => i.id);
+    expect(ids).not.toContain('go-to-artist');
+  });
+
+  it('playlist-song: go-to-artist uses case-insensitive artist match', () => {
+    const artists = [{ id: 'a1', name: 'The Beatles', _count: { songs: 0, followers: 0 } }];
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper([], [], artists),
+    });
+
+    const items = result.current.getMenuItems('playlist-song', {
+      song: { id: 's1', title: 'Hey Jude', artist: 'the beatles' },
+    });
+
+    const ids = items.map((i: any) => i.id);
+    expect(ids).toContain('go-to-artist');
+  });
+
+  it('now-playing: includes go-to-artist when artist matches', () => {
+    const artists = [{ id: 'a1', name: 'Queen', _count: { songs: 0, followers: 0 } }];
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper([], [], artists),
+    });
+
+    const items = result.current.getMenuItems('now-playing', {
+      song: { id: 's1', title: 'Bohemian Rhapsody', artist: 'Queen' },
+    });
+
+    const ids = items.map((i: any) => i.id);
+    expect(ids).toContain('go-to-artist');
+  });
+
+  it('now-playing: omits go-to-artist when no matching artist', () => {
+    const { result } = renderHook(() => useContextMenuFromProvider(), {
+      wrapper: createWrapper(),
+    });
+
+    const items = result.current.getMenuItems('now-playing', {
+      song: { id: 's1', title: 'Song', artist: 'Unknown' },
+    });
+
+    const ids = items.map((i: any) => i.id);
+    expect(ids).not.toContain('go-to-artist');
+  });
+
+  it('now-playing: go-to-artist onClick dispatches setSelectedArtistId and setSongFilter', () => {
+    const artists = [{ id: 'a1', name: 'Pink Floyd', _count: { songs: 0, followers: 0 } }];
+    const store = createStore([], [], artists);
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <Provider store={store}>
+        <ContextMenuProvider>{children}</ContextMenuProvider>
+      </Provider>
+    );
+    const { result } = renderHook(() => useContextMenuFromProvider(), { wrapper });
+
+    const items = result.current.getMenuItems('now-playing', {
+      song: { id: 's1', title: 'Comfortably Numb', artist: 'Pink Floyd' },
+    });
+
+    const goToArtist = items.find((i: any) => i.id === 'go-to-artist');
+    act(() => {
+      goToArtist!.onClick!();
+    });
+
+    expect(store.getState().artists.selectedArtistId).toBe('a1');
+    expect(store.getState().songs.filter).toEqual({ type: 'artist', value: 'Pink Floyd' });
   });
 });
