@@ -256,7 +256,7 @@ describe('ArtistView', () => {
     await waitFor(() => screen.getByTestId('card-Debut'));
     fireEvent.click(screen.getByTestId('card-Debut'));
     expect(screen.getByText('Debut')).toBeInTheDocument();
-    expect(screen.getByText('2 songs')).toBeInTheDocument();
+    expect(screen.getByText(/2 songs/)).toBeInTheDocument();
   });
 
   it('returns to card grid when Back is clicked', async () => {

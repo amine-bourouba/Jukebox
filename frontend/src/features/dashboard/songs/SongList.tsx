@@ -144,7 +144,10 @@ export default function SongList() {
                   {heading}
                 </p>
                 <p className="mt-1 text-gray-500">
-                  {songs.length} song(s)
+                  {(() => {
+                    const total = songs.reduce((acc: number, s: any) => acc + (s.duration ?? 0), 0);
+                    return `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}${total > 0 ? ` • ${formatTotalDuration(total)}` : ''}`;
+                  })()}
                 </p>
               </div>
             </div>

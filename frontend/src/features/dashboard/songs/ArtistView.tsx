@@ -4,6 +4,15 @@ import { useSelector, useDispatch } from 'react-redux';
 import { MdAccessTime, MdArrowBack } from 'react-icons/md';
 import { IoAlbums } from 'react-icons/io5';
 
+function formatTotalDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h} hr ${m} min`;
+  if (m > 0) return `${m} min ${s} sec`;
+  return `${s} sec`;
+}
+
 import { RootState, AppDispatch } from '../../../store/store';
 import { setTrack, setQueue, setShuffle } from '../../../store/playerSlice';
 import ArtistHeader from './ArtistHeader';
@@ -133,22 +142,36 @@ export default function ArtistView() {
         {selectedGroup ? (
           /* ── Album detail view ── */
           <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3 mb-6">
-              <button
-                onClick={() => setSelectedAlbum(null)}
-                className="flex items-center gap-1 text-silver hover:text-moon transition-colors text-sm"
-                aria-label="Back to discography"
-              >
-                <MdArrowBack size={18} />
-                Discography
-              </button>
-              <span className="text-white/20">·</span>
-              <div className="flex items-center gap-2">
-                <IoAlbums size={16} className="text-amethyst" />
-                <span className="text-white font-semibold">{selectedGroup.albumName}</span>
-                <span className="text-silver text-sm">
+            {/* Back nav */}
+            <button
+              onClick={() => setSelectedAlbum(null)}
+              className="flex items-center gap-1 text-silver hover:text-moon transition-colors text-sm mb-6"
+              aria-label="Back to discography"
+            >
+              <MdArrowBack size={18} />
+              Discography
+            </button>
+
+            {/* Album header */}
+            <div className="flex items-end gap-5 mb-6">
+              <div className="w-36 h-36 shrink-0 rounded-md overflow-hidden bg-shadow flex items-center justify-center">
+                {selectedGroup.coverUrl ? (
+                  <img src={selectedGroup.coverUrl} alt={selectedGroup.albumName} className="w-full h-full object-cover" />
+                ) : (
+                  <IoAlbums size={56} className="text-amethyst/50" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-silver uppercase tracking-widest mb-1">Album</p>
+                <p className="text-4xl font-extrabold text-white truncate">{selectedGroup.albumName}</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  {artist?.name && <span className="text-white font-medium">{artist.name} · </span>}
                   {selectedGroup.songs.length} {selectedGroup.songs.length === 1 ? 'song' : 'songs'}
-                </span>
+                  {(() => {
+                    const total = selectedGroup.songs.reduce((acc, ps) => acc + ((ps.song as any).duration ?? 0), 0);
+                    return total > 0 ? ` · ${formatTotalDuration(total)}` : '';
+                  })()}
+                </p>
               </div>
             </div>
 
@@ -173,6 +196,28 @@ export default function ArtistView() {
                 ))}
               </tbody>
             </table>
+
+            {/* More by this artist */}
+            {albumGroups.filter(g => g.albumName !== selectedGroup.albumName).length > 0 && (
+              <div className="mt-8 mb-4">
+                <p className="text-sm font-bold text-white mb-4">
+                  More by {artist?.name ?? 'this artist'}
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {albumGroups
+                    .filter(g => g.albumName !== selectedGroup.albumName)
+                    .map(({ albumName, songs: albumSongs, coverUrl }) => (
+                      <AlbumCard
+                        key={albumName}
+                        albumName={albumName}
+                        songCount={albumSongs.length}
+                        coverUrl={coverUrl}
+                        onClick={() => setSelectedAlbum(albumName)}
+                      />
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* ── Album card grid ── */

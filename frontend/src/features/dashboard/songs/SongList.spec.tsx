@@ -94,7 +94,7 @@ describe('SongList', () => {
 
     expect(screen.getByText('Playlist')).toBeInTheDocument();
     expect(screen.getByText('Chill Beats')).toBeInTheDocument();
-    expect(screen.getByText('0 song(s)')).toBeInTheDocument();
+    expect(screen.getByText('0 songs')).toBeInTheDocument();
   });
 
   it('should render table headers', () => {
@@ -178,7 +178,7 @@ describe('SongList', () => {
       </Provider>
     );
 
-    expect(screen.getByText('2 song(s)')).toBeInTheDocument();
+    expect(screen.getByText(/^2 songs/)).toBeInTheDocument();
     expect(screen.getByTestId('song-s1')).toBeInTheDocument();
     expect(screen.getByTestId('song-s2')).toBeInTheDocument();
   });
