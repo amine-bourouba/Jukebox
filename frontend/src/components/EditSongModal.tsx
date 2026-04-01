@@ -10,7 +10,6 @@ interface FormData {
   title: string;
   artist: string;
   album: string;
-  explicit: boolean;
 }
 
 const EditSongContext = createContext<EditSongContextType | null>(null);
@@ -23,7 +22,6 @@ export function EditSongModalProvider({ children }: { children: React.ReactNode 
     title: '',
     artist: '',
     album: '',
-    explicit: false,
   });
 
   const showEditSong = useCallback((song: any) => {
@@ -32,7 +30,6 @@ export function EditSongModalProvider({ children }: { children: React.ReactNode 
       title: song.title || '',
       artist: song.artist || '',
       album: song.album || '',
-      explicit: song.explicit || false,
     });
     setIsOpen(true);
   }, []);
@@ -96,18 +93,6 @@ export function EditSongModalProvider({ children }: { children: React.ReactNode 
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="explicit"
-                  checked={formData.explicit}
-                  onChange={e => handleChange('explicit', e.target.checked)}
-                  className="rounded bg-white/10 border-white/20 text-amethyst focus:ring-amethyst"
-                />
-                <label htmlFor="explicit" className="text-sm text-gray-300">
-                  Explicit
-                </label>
-              </div>
             </div>
 
             <div className="flex gap-3 justify-end mt-6">

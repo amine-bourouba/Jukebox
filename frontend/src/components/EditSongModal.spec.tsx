@@ -26,7 +26,7 @@ function createStore() {
       songs: {
         filterOptions: { artist: [], genre: [] },
         filter: { type: 'all', value: '' },
-        songs: [{ id: 's1', title: 'Old Title', artist: 'Old Artist', album: 'Old Album', explicit: false }],
+        songs: [{ id: 's1', title: 'Old Title', artist: 'Old Artist', album: 'Old Album' }],
         likedSongIds: [],
       },
       player: {
@@ -52,7 +52,6 @@ function TestComponent() {
           title: 'Old Title',
           artist: 'Old Artist',
           album: 'Old Album',
-          explicit: false,
         })
       }
     >
@@ -143,7 +142,7 @@ describe('EditSongModal', () => {
 
   it('should dispatch updateSong and close modal on Save', async () => {
     const api = (await import('../services/api')).default;
-    (api.put as any).mockResolvedValue({ data: { id: 's1', title: 'New Title', artist: 'Old Artist', album: 'Old Album', explicit: false } });
+    (api.put as any).mockResolvedValue({ data: { id: 's1', title: 'New Title', artist: 'Old Artist', album: 'Old Album' } });
 
     const store = createStore();
     render(

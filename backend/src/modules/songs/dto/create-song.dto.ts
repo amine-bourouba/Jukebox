@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsArray, IsInt, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsInt } from 'class-validator';
 
 export class CreateSongDto {
   @IsString()
@@ -18,10 +18,6 @@ export class CreateSongDto {
   @IsOptional()
   @IsInt()
   duration?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  explicit?: boolean;
 
   @IsString()
   filePath!: string;

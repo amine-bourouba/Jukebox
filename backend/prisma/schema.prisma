@@ -52,7 +52,6 @@ model Song {
   albumId       String?
   coverImageUrl String?
   duration      Int?
-  explicit      Boolean        @default(false)
   filePath      String
   storageKey    String?
   isPublic      Boolean        @default(true)
