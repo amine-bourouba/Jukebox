@@ -22,6 +22,15 @@ export default function SongList() {
   }, [dispatch, filter, selectedPlaylistId]);
 
 
+  const formatTotalDuration = (seconds: number): string => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h} hr ${m} min`;
+    if (m > 0) return `${m} min ${s} sec`;
+    return `${s} sec`;
+  };
+
   const normaliseTrack = (s: any) => ({
     ...s,
     coverUrl: s.coverImageUrl || s.thumbnail || s.coverUrl || '',
@@ -65,7 +74,11 @@ export default function SongList() {
                     {selectedPlaylist?.title}
                   </p>
                   <p className="mt-1 text-gray-500">
-                    {selectedPlaylist?.playlistSongs.length} song(s)
+                    {(() => {
+                      const songs = selectedPlaylist?.playlistSongs ?? [];
+                      const total = songs.reduce((acc: number, ps: any) => acc + (ps.song?.duration ?? 0), 0);
+                      return `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}${total > 0 ? ` • ${formatTotalDuration(total)}` : ''}`;
+                    })()}
                   </p>
                 </div>
               </div>
