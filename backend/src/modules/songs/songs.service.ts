@@ -129,10 +129,6 @@ export class SongsService {
     return { message: 'Song unliked' };
   }
 
-  async findByFilePath(filePath: string) {
-    return this.prisma.song.findFirst({ where: { filePath } });
-  }
-
   async getLikedSongs(userId: string, skip = 0, take = 20) {
     return this.prisma.songLike.findMany({
       where: { userId },
