@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@swc/core": "^1.15.18",
     "@types/bcrypt": "^6.0.0",
     "@types/multer": "^2.0.0",
@@ -42,8 +43,8 @@
   "scripts": {
     "start": "nest start --watch",
     "build": "nest build",
-    "test": "vitest run --mode test",
-    "test:watch": "vitest run --mode test --watch",
-    "test:coverage": "vitest run --mode test --coverage"
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage"
   }
 }

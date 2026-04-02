@@ -1,6 +1,7 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
+    "declarationMap": true,
     "outDir": "dist",
     "types": ["node"],
     "rootDir": "src",
@@ -8,7 +9,17 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "target": "es2021",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["es2022"],
     "esModuleInterop": true,
+    "importHelpers": true,
+    "isolatedModules": true,
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
     "skipLibCheck": true,
     "strict": false
   },

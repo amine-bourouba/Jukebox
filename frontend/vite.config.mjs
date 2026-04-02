@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => ({
   root: __dirname,
-  cacheDir: '../node_modules/.vite/frontend',
+  cacheDir: './node_modules/.vite',
   define: {
     // Ensure React loads its development build during tests so that act() works.
     // In all other modes (dev/production) keep the mode value as-is.
