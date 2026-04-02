@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -27,6 +28,9 @@ import { JwtAuthGuard } from '../modules/auth/jwt-auth.guard';
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'changeme',
       signOptions: { expiresIn: '1d' },
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true, // Makes vars available everywhere
     }),
     AuthModule,
     UsersModule,
