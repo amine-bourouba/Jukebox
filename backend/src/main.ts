@@ -9,8 +9,11 @@ async function bootstrap() {
   const globalPrefix = 'api';
   app.setGlobalPrefix(globalPrefix);
   const port = process.env.PORT || 3000;
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
+    : ['http://localhost:8000', 'http://localhost:8080'];
   app.enableCors({
-    origin: ['http://localhost:8000', 'http://localhost:8080'],
+    origin: allowedOrigins,
     credentials: true,
   });
   await app.listen(port);
