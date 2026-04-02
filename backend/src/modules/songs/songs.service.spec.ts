@@ -320,4 +320,26 @@ describe('SongsService', () => {
       );
     });
   });
+
+  describe('findByFilePath', () => {
+    it('should return a song matching the given filePath', async () => {
+      const mockSong = { id: 'song-1', filePath: 'uploads/songs/test.mp3' };
+      prisma.song.findFirst.mockResolvedValue(mockSong);
+
+      const result = await service.findByFilePath('uploads/songs/test.mp3');
+
+      expect(prisma.song.findFirst).toHaveBeenCalledWith({
+        where: { filePath: 'uploads/songs/test.mp3' },
+      });
+      expect(result).toEqual(mockSong);
+    });
+
+    it('should return null when no song matches the filePath', async () => {
+      prisma.song.findFirst.mockResolvedValue(null);
+
+      const result = await service.findByFilePath('uploads/songs/nonexistent.mp3');
+
+      expect(result).toBeNull();
+    });
+  });
 });

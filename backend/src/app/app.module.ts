@@ -16,6 +16,7 @@ import { MediaModule } from '../modules/media/media.module';
 import { AnalyticsModule } from '../modules/analytics/analytics.module';
 import { ArtistsModule } from '../modules/artists/artists.module';
 import { AlbumsModule } from '../modules/albums/albums.module';
+import { IngestModule } from '../modules/ingest/ingest.module';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../modules/auth/auth.service';
@@ -43,6 +44,7 @@ import { JwtAuthGuard } from '../modules/auth/jwt-auth.guard';
     AnalyticsModule,
     ArtistsModule,
     AlbumsModule,
+    IngestModule,
   ],
   controllers: [AppController],
   providers: [
