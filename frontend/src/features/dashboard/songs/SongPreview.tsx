@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { MdMusicNote, MdFavorite, MdFavoriteBorder } from 'react-icons/md';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
@@ -6,19 +7,29 @@ import { IoMusicalNotes } from 'react-icons/io5';
 import { RootState, AppDispatch } from '../../../store/store';
 import { setTrack } from '../../../store/playerSlice';
 import { likeSong, unlikeSong } from '../../../store/songSlice';
+import { fetchHistory } from '../../../store/historySlice';
 import { useImageColor } from '../../../hooks/useImageColor';
 import { useContextMenu } from '../../../components/ContextMenu/useContextMenu';
+
+type Tab = 'upnext' | 'history';
 
 export default function SongPreview({ currentTrack }: { currentTrack: any }) {
   const dispatch = useDispatch<AppDispatch>();
   const { queue } = useSelector((state: RootState) => state.player);
   const likedSongIds = useSelector((state: RootState) => state.songs.likedSongIds);
+  const { items: historyItems, loading: historyLoading } = useSelector(
+    (state: RootState) => state.history,
+  );
   const accentColor = useImageColor(currentTrack.coverUrl);
   const { showContextMenuAt } = useContextMenu();
+  const [activeTab, setActiveTab] = useState<Tab>('upnext');
+
+  useEffect(() => {
+    dispatch(fetchHistory());
+  }, [dispatch]);
 
   const isLiked = likedSongIds.includes(currentTrack.id);
-
-  const currentIndex = queue.findIndex(t => t.id === currentTrack.id);
+  const currentIndex = queue.findIndex((t) => t.id === currentTrack.id);
   const upNext = currentIndex >= 0 ? queue.slice(currentIndex + 1) : [];
 
   const panelStyle = accentColor
@@ -86,33 +97,92 @@ export default function SongPreview({ currentTrack }: { currentTrack: any }) {
       {/* Divider */}
       <div className="border-t border-white/10 my-3 shrink-0" />
 
-      {/* Up Next */}
+      {/* Tabs */}
+      <div className="flex gap-4 shrink-0 mb-2">
+        <button
+          onClick={() => setActiveTab('upnext')}
+          className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-colors ${
+            activeTab === 'upnext'
+              ? 'text-white border-amethyst'
+              : 'text-silver border-transparent hover:text-white'
+          }`}
+        >
+          Up Next
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`text-xs font-bold uppercase tracking-widest pb-1 border-b-2 transition-colors ${
+            activeTab === 'history'
+              ? 'text-white border-amethyst'
+              : 'text-silver border-transparent hover:text-white'
+          }`}
+        >
+          Recently Played
+        </button>
+      </div>
+
+      {/* Tab content */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        <p className="text-xs font-bold text-silver uppercase tracking-widest mb-2">Up Next</p>
-        {upNext.length === 0 ? (
-          <p className="text-xs text-gray-500 italic">Queue is empty</p>
+        {activeTab === 'upnext' ? (
+          upNext.length === 0 ? (
+            <p className="text-xs text-gray-500 italic">Queue is empty</p>
+          ) : (
+            <ul className="space-y-1">
+              {upNext.map((track, i) => (
+                <li key={`${track.id}-${i}`}>
+                  <button
+                    onClick={() => dispatch(setTrack(track))}
+                    className="w-full flex items-center gap-2 px-1 py-1.5 rounded hover:bg-white/10 transition-colors text-left group"
+                  >
+                    <div className="w-8 h-8 rounded shrink-0 overflow-hidden bg-white/10 flex items-center justify-center">
+                      {track.coverUrl ? (
+                        <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <IoMusicalNotes size={14} className="text-amethyst" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-white truncate group-hover:text-amethyst transition-colors">
+                        {track.title}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">{track.artist}</p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )
+        ) : historyLoading ? (
+          <p className="text-xs text-gray-500 italic">Loading…</p>
+        ) : historyItems.length === 0 ? (
+          <p className="text-xs text-gray-500 italic">Nothing played yet</p>
         ) : (
           <ul className="space-y-1">
-            {upNext.map((track, i) => (
-              <li key={`${track.id}-${i}`}>
-                <button
-                  onClick={() => dispatch(setTrack(track))}
-                  className="w-full flex items-center gap-2 px-1 py-1.5 rounded hover:bg-white/10 transition-colors text-left group"
-                >
+            {historyItems.map((entry) => (
+              <li key={entry.id}>
+                <div className="w-full flex items-center gap-2 px-1 py-1.5 rounded">
                   <div className="w-8 h-8 rounded shrink-0 overflow-hidden bg-white/10 flex items-center justify-center">
-                    {track.coverUrl ? (
-                      <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
+                    {entry.song.coverImageUrl ? (
+                      <img
+                        src={entry.song.coverImageUrl}
+                        alt={entry.song.title}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <IoMusicalNotes size={14} className="text-amethyst" />
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-white truncate group-hover:text-amethyst transition-colors">
-                      {track.title}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">{track.artist}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-white truncate">{entry.song.title}</p>
+                    <p className="text-xs text-gray-400 truncate">{entry.song.artist}</p>
                   </div>
-                </button>
+                  <span className="text-xs text-gray-600 shrink-0">
+                    {new Date(entry.playedAt).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>

@@ -4,12 +4,17 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import playerReducer from '../../../store/playerSlice';
 import songsReducer from '../../../store/songSlice';
+import historyReducer from '../../../store/historySlice';
 import SongPreview from './SongPreview';
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
 vi.mock('../../../hooks/useImageColor', () => ({
   useImageColor: () => null,
+}));
+
+vi.mock('../../../services/api', () => ({
+  default: { get: vi.fn().mockResolvedValue({ data: [] }), post: vi.fn() },
 }));
 
 const mockShowContextMenuAt = vi.fn();
@@ -28,7 +33,7 @@ function makeStore(opts: {
   likedSongIds?: string[];
 } = {}) {
   return configureStore({
-    reducer: { player: playerReducer, songs: songsReducer },
+    reducer: { player: playerReducer, songs: songsReducer, history: historyReducer },
     preloadedState: {
       player: {
         currentTrack: null,
