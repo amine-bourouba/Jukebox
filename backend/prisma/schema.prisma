@@ -39,6 +39,7 @@ model User {
   playlistFollowers PlaylistFollower[]
   artists           Artist[]
   artistFollows     ArtistFollow[]
+  playHistory       PlayHistory[]
   refreshToken      String?
 }
 
@@ -64,6 +65,7 @@ model Song {
   comments      Comment[]
   songLikes     SongLike[]
   playlistSongs PlaylistSong[]
+  playHistory   PlayHistory[]
 }
 
 model Album {
@@ -160,4 +162,15 @@ model UserFollow {
   followedAt  DateTime @default(now())
   follower    User     @relation("Followed", fields: [followerId], references: [id])
   following   User     @relation("Following", fields: [followingId], references: [id])
+}
+
+model PlayHistory {
+  id       String   @id @default(uuid())
+  userId   String
+  songId   String
+  playedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
+  song     Song     @relation(fields: [songId], references: [id])
+
+  @@index([userId, playedAt])
 }
