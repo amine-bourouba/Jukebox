@@ -83,5 +83,10 @@ export function createMockPrismaService() {
       upsert: vi.fn(),
       delete: vi.fn(),
     },
+    playHistory: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+    },
+    $transaction: vi.fn(),
   };
 }
