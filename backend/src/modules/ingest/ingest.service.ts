@@ -37,7 +37,6 @@ export class IngestService implements OnModuleInit {
   private readonly watchDir = process.env.INGEST_WATCH_DIR ?? 'uploads/songs';
   private readonly minAgeSeconds = Number(process.env.INGEST_MIN_AGE_SECONDS ?? 30);
   private readonly acoustidDelayMs = Number(process.env.INGEST_ACOUSTID_DELAY_MS ?? 400);
-  private readonly intervalMinutes = Number(process.env.INGEST_INTERVAL_MINUTES ?? 2);
 
   constructor(
     private readonly songsService: SongsService,
