@@ -1,6 +1,14 @@
-import { Controller, Get, Put, Param, Body, NotFoundException, BadRequestException, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller, Get, Put, Post, Param, Body,
+  NotFoundException, BadRequestException, ForbiddenException,
+  Req, UseGuards, UseInterceptors, UploadedFile,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('users')
@@ -33,6 +41,43 @@ export class UsersController {
     } catch (error: any) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  // PUT /users/me/password
+  @UseGuards(JwtAuthGuard)
+  @Put('me/password')
+  async changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
+    try {
+      await this.usersService.changePassword(req.user.userId, dto.currentPassword, dto.newPassword);
+      return { message: 'Password updated' };
+    } catch (error: any) {
+      if (error instanceof ForbiddenException) throw error;
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  // POST /users/me/avatar
+  @UseGuards(JwtAuthGuard)
+  @Post('me/avatar')
+  @UseInterceptors(FileInterceptor('avatar', {
+    storage: diskStorage({
+      destination: './uploads/avatars',
+      filename: (_req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, unique + extname(file.originalname));
+      },
+    }),
+    fileFilter: (_req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new BadRequestException('Only image files are allowed'), false);
+    },
+  }))
+  async uploadAvatar(@Req() req: any, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file provided');
+    const avatarUrl = `uploads/avatars/${file.filename}`;
+    const updated = await this.usersService.updateAvatar(req.user.userId, avatarUrl);
+    const { password, refreshToken, ...safeUser } = updated;
+    return safeUser;
   }
 
   // GET /users/:id
