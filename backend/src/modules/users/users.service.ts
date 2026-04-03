@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -19,6 +20,18 @@ export class UsersService {
 
   async getUserById(id: string) {
     return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  async changePassword(id: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) throw new ForbiddenException('Current password is incorrect');
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({ where: { id }, data: { password: hashed } });
+  }
+
+  async updateAvatar(id: string, avatarUrl: string) {
+    return this.prisma.user.update({ where: { id }, data: { avatarUrl } });
   }
 
   async getUserLibrarySongs(userId: string) {
