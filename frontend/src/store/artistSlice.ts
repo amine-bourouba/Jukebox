@@ -9,7 +9,7 @@ export interface Artist {
   _count: { songs: number; followers: number };
 }
 
-interface ArtistState {
+export interface ArtistState {
   artists: Artist[];
   selectedArtistId: string | null;
   followedArtistIds: string[];
