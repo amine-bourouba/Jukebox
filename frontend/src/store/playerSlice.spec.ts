@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
 import playerReducer, {
   setTrack, clearTrack, setQueue, addToQueue, setRepeat, setShuffle, setSelectedPlaylist,
   fetchPlaylists, fetchSelectedPlaylist, addSongToPlaylist, removeSongFromPlaylist, playPlaylist,
   deletePlaylist,
 } from './playerSlice';
+import songsReducer, { fetchFilteredSongs } from './songSlice';
 import api from '../services/api';
 
 vi.mock('../services/api', () => ({
@@ -231,6 +232,74 @@ describe('playerSlice', () => {
         expect.objectContaining({ message: 'Playlist is empty' })
       );
       expect(store.getState().player.queue).toHaveLength(0);
+    });
+  });
+
+  describe('stale track guard', () => {
+    function createStoreWithGuard(initialPlayerState?: any) {
+      const listener = createListenerMiddleware();
+      listener.startListening({
+        actionCreator: fetchFilteredSongs.fulfilled,
+        effect: (action, listenerApi) => {
+          const state = listenerApi.getState() as any;
+          const { currentTrack } = state.player;
+          const songs: any[] = action.payload ?? [];
+          if (currentTrack && !songs.some((s: any) => s.id === currentTrack.id)) {
+            listenerApi.dispatch(clearTrack());
+          }
+        },
+      });
+      return configureStore({
+        reducer: { player: playerReducer, songs: songsReducer },
+        preloadedState: initialPlayerState ? { player: initialPlayerState } : undefined,
+        middleware: (getDefaultMiddleware) =>
+          getDefaultMiddleware().prepend(listener.middleware),
+      });
+    }
+
+    it('clears currentTrack when it is not in the fetched songs', async () => {
+      const store = createStoreWithGuard({
+        ...defaultState,
+        currentTrack: { id: 'stale-id', title: 'Old Song', artist: 'A', streamUrl: '/s' },
+      });
+
+      store.dispatch(
+        fetchFilteredSongs.fulfilled(
+          [{ id: 'other-id', title: 'Other', artist: 'B' }],
+          'req',
+          { type: 'all', value: '' }
+        )
+      );
+      await Promise.resolve();
+
+      expect(store.getState().player.currentTrack).toBeNull();
+    });
+
+    it('keeps currentTrack when it is present in the fetched songs', async () => {
+      const track = { id: 'live-id', title: 'Still Here', artist: 'A', streamUrl: '/s' };
+      const store = createStoreWithGuard({ ...defaultState, currentTrack: track });
+
+      store.dispatch(
+        fetchFilteredSongs.fulfilled(
+          [{ id: 'live-id', title: 'Still Here', artist: 'A' }],
+          'req',
+          { type: 'all', value: '' }
+        )
+      );
+      await Promise.resolve();
+
+      expect(store.getState().player.currentTrack).toEqual(track);
+    });
+
+    it('does nothing when there is no currentTrack', async () => {
+      const store = createStoreWithGuard({ ...defaultState, currentTrack: null });
+
+      store.dispatch(
+        fetchFilteredSongs.fulfilled([], 'req', { type: 'all', value: '' })
+      );
+      await Promise.resolve();
+
+      expect(store.getState().player.currentTrack).toBeNull();
     });
   });
 

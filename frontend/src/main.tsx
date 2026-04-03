@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import * as ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { store } from './store/store'; // adjust path if needed
+import { store } from './store/store';
 import App from './app/app';
 import './app/app.css';
 
