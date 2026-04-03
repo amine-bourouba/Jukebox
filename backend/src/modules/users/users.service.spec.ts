@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+
+vi.mock('bcrypt', () => ({
+  compare: vi.fn(),
+  hash: vi.fn().mockResolvedValue('hashed-new-password'),
+}));
 import { UsersService } from './users.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { createMockPrismaService } from '../../test/mock-prisma';
@@ -78,6 +84,47 @@ describe('UsersService', () => {
         where: { songLikes: { some: { userId: 'user-1' } } },
       });
       expect(result).toEqual(songs);
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should update password when currentPassword is correct', async () => {
+      const { compare } = await import('bcrypt');
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', password: 'hashed-old' });
+      (compare as any).mockResolvedValue(true);
+      prisma.user.update.mockResolvedValue({});
+
+      await service.changePassword('user-1', 'old-pass', 'new-pass-123');
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { password: 'hashed-new-password' },
+      });
+    });
+
+    it('should throw ForbiddenException when currentPassword is wrong', async () => {
+      const { compare } = await import('bcrypt');
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-1', password: 'hashed-old' });
+      (compare as any).mockResolvedValue(false);
+
+      await expect(service.changePassword('user-1', 'wrong', 'new-pass-123'))
+        .rejects.toThrow(ForbiddenException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateAvatar', () => {
+    it('should update avatarUrl and return the user', async () => {
+      const updated = { id: 'user-1', avatarUrl: 'uploads/avatars/pic.jpg' };
+      prisma.user.update.mockResolvedValue(updated);
+
+      const result = await service.updateAvatar('user-1', 'uploads/avatars/pic.jpg');
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: { avatarUrl: 'uploads/avatars/pic.jpg' },
+      });
+      expect(result).toEqual(updated);
     });
   });
 
