@@ -36,6 +36,10 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
   }, [item.submenu]);
 
   const handleClick = useCallback(() => {
+    if (item.submenu && item.submenu.length > 0) {
+      setIsSubmenuOpen(prev => !prev);
+      return;
+    }
     if (item.onClick && !item.disabled) {
       onItemClick(item);
     }
@@ -70,6 +74,7 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
   }
 
   const hasSubmenu = item.submenu && item.submenu.length > 0;
+  const isMobile = window.innerWidth < 768;
 
   return (
     <div
@@ -107,16 +112,9 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
         )}
       </button>
       {hasSubmenu && isSubmenuOpen && (
-        <div
-          ref={submenuRef}
-          className={`
-            absolute top-0 min-w-48 max-h-64 overflow-y-auto bg-shadow border border-gray-700 rounded-lg shadow-xl z-[10000]
-            ${submenuPosition === 'right' ? 'left-full ml-1' : 'right-full mr-1'}
-          `}
-          role="menu"
-          aria-orientation="vertical"
-        >
-          <div className="py-1">
+        isMobile ? (
+          /* Inline expansion inside the bottom sheet */
+          <div className="border-l-2 border-amethyst/40 ml-6 py-1">
             {item.submenu?.map(subItem => (
               <MenuItem
                 key={subItem.id}
@@ -126,7 +124,29 @@ export default function MenuItem({ item, onItemClick, level = 0 }: MenuItemProps
               />
             ))}
           </div>
-        </div>
+        ) : (
+          /* Floating submenu on desktop */
+          <div
+            ref={submenuRef}
+            className={`
+              absolute top-0 min-w-48 max-h-64 overflow-y-auto bg-shadow border border-gray-700 rounded-lg shadow-xl z-[10000]
+              ${submenuPosition === 'right' ? 'left-full ml-1' : 'right-full mr-1'}
+            `}
+            role="menu"
+            aria-orientation="vertical"
+          >
+            <div className="py-1">
+              {item.submenu?.map(subItem => (
+                <MenuItem
+                  key={subItem.id}
+                  item={subItem}
+                  onItemClick={onItemClick}
+                  level={level + 1}
+                />
+              ))}
+            </div>
+          </div>
+        )
       )}
       {item.separator && <div className="border-t border-gray-600 my-1" />}
     </div>

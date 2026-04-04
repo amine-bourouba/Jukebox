@@ -120,6 +120,40 @@ export default function ContextMenu() {
     return null;
   }
 
+  const isMobile = window.innerWidth < 768;
+
+  if (isMobile) {
+    return createPortal(
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 z-[9998] bg-black/50"
+          onClick={hideMenu}
+          aria-hidden="true"
+        />
+        {/* Bottom sheet */}
+        <div
+          ref={menuRef}
+          className="fixed bottom-0 left-0 right-0 z-[9999] bg-shadow rounded-t-2xl pb-safe"
+          role="menu"
+        >
+          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-2" />
+          <div className="py-2">
+            {state.config.items.map(item => (
+              <MenuItem
+                key={item.id}
+                item={item}
+                onItemClick={handleItemClick}
+                level={0}
+              />
+            ))}
+          </div>
+        </div>
+      </>,
+      document.body
+    ) as React.ReactElement;
+  }
+
   const mainMenu = createPortal(
     <div
       ref={menuRef}
@@ -143,8 +177,8 @@ export default function ContextMenu() {
   );
 
   return (
-  <>
-    {mainMenu}
-  </>
-);
+    <>
+      {mainMenu}
+    </>
+  );
 }

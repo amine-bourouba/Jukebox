@@ -73,6 +73,26 @@ describe('MenuItem', () => {
     expect(button).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('should toggle submenu open on click', () => {
+    const item = {
+      ...baseItem,
+      submenu: [{ id: 'sub1', label: 'Sub Item' }],
+    };
+    render(<MenuItem item={item} onItemClick={vi.fn()} />);
+    const button = screen.getByRole('menuitem');
+
+    // Closed initially
+    expect(screen.queryByText('Sub Item')).not.toBeInTheDocument();
+
+    // Click opens it
+    fireEvent.click(button);
+    expect(screen.getByText('Sub Item')).toBeInTheDocument();
+
+    // Click again closes it
+    fireEvent.click(button);
+    expect(screen.queryByText('Sub Item')).not.toBeInTheDocument();
+  });
+
   it('should show submenu on mouse enter', async () => {
     const item = {
       ...baseItem,
