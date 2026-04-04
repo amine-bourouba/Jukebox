@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { MdArrowBack } from 'react-icons/md';
 import { RootState, AppDispatch } from '../../store/store';
 import { updateUser } from '../../store/authSlice';
 import { snackbar } from '../../services/snackbar';
@@ -8,6 +10,7 @@ import Header from '../../components/Header';
 
 export default function SettingsPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
@@ -86,7 +89,16 @@ export default function SettingsPage() {
     <div className="h-screen bg-gradient-to-br from-midnight via-sapphire to-amethyst flex flex-col overflow-hidden">
       <Header />
       <main className="flex-1 overflow-y-auto px-6 py-8 max-w-xl mx-auto w-full">
-        <h1 className="text-2xl font-bold text-white mb-8">Settings</h1>
+        <div className="flex items-center gap-3 mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-silver hover:text-white"
+            aria-label="Go back"
+          >
+            <MdArrowBack size={22} />
+          </button>
+          <h1 className="text-2xl font-bold text-white">Settings</h1>
+        </div>
 
         {/* Profile section */}
         <section className="mb-8">
