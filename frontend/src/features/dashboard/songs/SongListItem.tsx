@@ -20,14 +20,13 @@ interface SongListElementProps {
   onPlay: (song: any) => void;
 }
 
-export default function SongListElement({ 
-  playlistSong, 
+export default function SongListElement({
+  playlistSong,
   onPlay,
 }: SongListElementProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { showContextMenu, showContextMenuAt } = useContextMenu();
 
-  // Helper functions remain the same...
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
@@ -40,97 +39,74 @@ export default function SongListElement({
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
-    
-    if (h > 0) {
-      return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
-    }
-    return [m, s].map(v => v.toString().padStart(2, '0')).join(':');
+    if (h > 0) return [h, m, s].map((v) => v.toString().padStart(2, '0')).join(':');
+    return [m, s].map((v) => v.toString().padStart(2, '0')).join(':');
   };
 
-  const handleRowClick = () => {
-    onPlay(playlistSong.song);
-  };
-
-  const handleMouseEnter = () => setIsHovered(true);
-  const handleMouseLeave = () => setIsHovered(false);
-
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const handleRowClick = () => onPlay(playlistSong.song);
+  const handleContextMenu = (event: React.MouseEvent) =>
     showContextMenu(event, 'playlist-song', playlistSong);
-  };
 
   const handleMenuButtonClick = (event: React.MouseEvent) => {
     event.stopPropagation();
-    
     const rect = event.currentTarget.getBoundingClientRect();
-    showContextMenuAt(
-      rect.left,
-      rect.bottom + 4,
-      'playlist-song',
-      playlistSong
-    );
+    showContextMenuAt(rect.left, rect.bottom + 4, 'playlist-song', playlistSong);
   };
 
   return (
     <tr
-      className="h-16 group cursor-pointer hover:bg-white/5 transition-colors duration-200"
+      className="h-14 group cursor-pointer hover:bg-white/5 transition-colors duration-200"
       onClick={handleRowClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onContextMenu={handleContextMenu}
     >
-      {/* Position Column */}
-      <td className="whitespace-nowrap pr-2 text-sm">
+      {/* Position — desktop only */}
+      <td className="hidden md:table-cell whitespace-nowrap pr-2 text-sm">
         <span className="text-white">{playlistSong.position}</span>
       </td>
 
-      {/* Title & Artist Column */}
+      {/* Title & Artist */}
       <td className="whitespace-nowrap pl-2 pr-3 text-sm">
-        <div className="flex items-center">
-          <div className="size-8 shrink-0 rounded-full overflow-hidden bg-white/10 flex items-center justify-center dark:outline dark:outline-white/10">
+        <div className="flex items-center gap-3">
+          <div className="size-10 shrink-0 rounded overflow-hidden bg-white/10 flex items-center justify-center">
             {playlistSong.song.thumbnail ? (
               <img
                 alt={`${playlistSong.song.title} thumbnail`}
                 src={playlistSong.song.thumbnail}
-                className="size-8 object-cover"
+                className="size-10 object-cover"
               />
             ) : (
               <IoMusicalNotes size={16} className="text-amethyst" />
             )}
           </div>
-          <div className="ml-4">
-            <div className="font-medium text-white">{playlistSong.song.title}</div>
-            <div className="mt-1 text-gray-400">{playlistSong.song.artist}</div>
+          <div>
+            <div className="font-medium text-white leading-tight">{playlistSong.song.title}</div>
+            <div className="text-gray-400 text-xs mt-0.5">{playlistSong.song.artist}</div>
           </div>
         </div>
       </td>
 
-      {/* Album Column */}
-      <td className="whitespace-nowrap px-3 py-5 text-sm">
+      {/* Album — desktop only */}
+      <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm">
         <span className="text-white">{playlistSong.song.album}</span>
       </td>
 
-      {/* Date Added Column */}
-      <td className="whitespace-nowrap px-3 py-5 text-sm">
+      {/* Date Added — desktop only */}
+      <td className="hidden md:table-cell whitespace-nowrap px-3 py-4 text-sm">
         <span className="text-white">{formatDate(playlistSong.addedAt)}</span>
       </td>
 
-      {/* Duration & Menu Column */}
-      <td className="whitespace-nowrap px-3 py-5 text-sm relative">
-        <div className="flex items-center justify-between">
-          <span className="text-white">{formatDuration(playlistSong.song.duration)}</span>
-
+      {/* Duration + Menu */}
+      <td className="whitespace-nowrap px-3 py-4 text-sm">
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-white hidden md:inline">{formatDuration(playlistSong.song.duration)}</span>
+          {/* On mobile: always visible. On desktop: hover-only */}
           <button
-            className={`
-              ml-2 p-1 rounded-full transition-all duration-200
-              hover:bg-white/10 focus:bg-white/10 focus:outline-none
-              ${isHovered 
-                ? 'opacity-100 pointer-events-auto' 
-                : 'opacity-0 pointer-events-none'
-              }
-            `}
+            className={`p-1.5 rounded-full transition-all duration-200 hover:bg-white/10 focus:bg-white/10 focus:outline-none
+              md:opacity-0 md:pointer-events-none md:group-hover:opacity-100 md:group-hover:pointer-events-auto`}
             onClick={handleMenuButtonClick}
             aria-label="More options"
-            tabIndex={isHovered ? 0 : -1}
           >
             <HiOutlineDotsHorizontal className="text-xl text-white" />
           </button>

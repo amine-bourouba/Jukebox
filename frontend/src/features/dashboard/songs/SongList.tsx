@@ -60,28 +60,20 @@ export default function SongList() {
     return (
       <div className="flex flex-col h-full overflow-hidden pt-8">
         <div className="px-4 sm:px-6 lg:px-8 flex-shrink-0">
-          {/* Playlist Header */}
-          <div className="sm:flex sm:items-center">
-            <div className="sm:flex">
-              <div className="shrink-0 mr-4 -mb-4">
-                <TbPlaylist size={175} className="text-amethyst" />
-              </div>
-              <div className="flex flex-col justify-between">
-                <div/>
-                <div>
-                  <p className="text-sm font-bold text-white">Playlist</p>
-                  <p className="mt-1 text-5xl font-extrabold text-white">
-                    {selectedPlaylist?.title}
-                  </p>
-                  <p className="mt-1 text-gray-500">
-                    {(() => {
-                      const songs = selectedPlaylist?.playlistSongs ?? [];
-                      const total = songs.reduce((acc: number, ps: any) => acc + (ps.song?.duration ?? 0), 0);
-                      return `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}${total > 0 ? ` • ${formatTotalDuration(total)}` : ''}`;
-                    })()}
-                  </p>
-                </div>
-              </div>
+          <div className="flex items-center gap-4">
+            <TbPlaylist size={64} className="text-amethyst shrink-0 hidden sm:block" />
+            <div>
+              <p className="text-xs font-bold text-silver uppercase tracking-widest">Playlist</p>
+              <p className="mt-1 text-2xl sm:text-4xl font-extrabold text-white">
+                {selectedPlaylist?.title}
+              </p>
+              <p className="mt-1 text-sm text-gray-500">
+                {(() => {
+                  const songs = selectedPlaylist?.playlistSongs ?? [];
+                  const total = songs.reduce((acc: number, ps: any) => acc + (ps.song?.duration ?? 0), 0);
+                  return `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}${total > 0 ? ` • ${formatTotalDuration(total)}` : ''}`;
+                })()}
+              </p>
             </div>
           </div>
         </div>
@@ -92,20 +84,12 @@ export default function SongList() {
             <table className="relative min-w-full divide-y divide-gray-300">
               <thead className="sticky top-0">
                 <tr>
-                  <th scope="col" className="py-4 w-8 text-left text-sm font-semibold text-white">
-                    #
-                  </th>
-                  <th scope="col" className="pl-1 py-4 w-1/3 text-left text-sm font-semibold text-white">
-                    Title
-                  </th>
-                  <th scope="col" className="pl-3 py-4 w-1/3 text-left text-sm font-semibold text-white">
-                    Album
-                  </th>
-                  <th scope="col" className="pl-3 py-4 text-left text-sm font-semibold text-white">
-                    Date Added
-                  </th>
+                  <th scope="col" className="hidden md:table-cell py-4 w-8 text-left text-sm font-semibold text-white">#</th>
+                  <th scope="col" className="pl-1 py-4 w-1/3 text-left text-sm font-semibold text-white">Title</th>
+                  <th scope="col" className="hidden md:table-cell pl-3 py-4 w-1/3 text-left text-sm font-semibold text-white">Album</th>
+                  <th scope="col" className="hidden md:table-cell pl-3 py-4 text-left text-sm font-semibold text-white">Date Added</th>
                   <th scope="col" className="py-4 pl-3 pr-4 sm:pr-0">
-                    <MdAccessTime size={20} className="text-white" />
+                    <MdAccessTime size={20} className="text-white hidden md:block" />
                   </th>
                 </tr>
               </thead>
@@ -131,26 +115,17 @@ export default function SongList() {
   return (
     <div className="flex flex-col h-full overflow-hidden pt-8">
       <div className="px-4 sm:px-6 lg:px-8 flex-shrink-0">
-        <div className="sm:flex sm:items-center">
-          <div className="sm:flex">
-            <div className="shrink-0 mr-4 -mb-4">
-              <IoMusicalNotes size={175} className="text-amethyst" />
-            </div>
-            <div className="flex flex-col justify-between">
-              <div/>
-              <div>
-                <p className="text-sm font-bold text-white">Library</p>
-                <p className="mt-1 text-5xl font-extrabold text-white">
-                  {heading}
-                </p>
-                <p className="mt-1 text-gray-500">
-                  {(() => {
-                    const total = songs.reduce((acc: number, s: any) => acc + (s.duration ?? 0), 0);
-                    return `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}${total > 0 ? ` • ${formatTotalDuration(total)}` : ''}`;
-                  })()}
-                </p>
-              </div>
-            </div>
+        <div className="flex items-center gap-4">
+          <IoMusicalNotes size={64} className="text-amethyst shrink-0 hidden sm:block" />
+          <div>
+            <p className="text-xs font-bold text-silver uppercase tracking-widest">Library</p>
+            <p className="mt-1 text-2xl sm:text-4xl font-extrabold text-white">{heading}</p>
+            <p className="mt-1 text-sm text-gray-500">
+              {(() => {
+                const total = songs.reduce((acc: number, s: any) => acc + (s.duration ?? 0), 0);
+                return `${songs.length} ${songs.length === 1 ? 'song' : 'songs'}${total > 0 ? ` • ${formatTotalDuration(total)}` : ''}`;
+              })()}
+            </p>
           </div>
         </div>
       </div>
@@ -160,20 +135,12 @@ export default function SongList() {
           <table className="relative min-w-full divide-y divide-gray-300">
             <thead className="sticky top-0">
               <tr>
-                <th scope="col" className="py-4 w-8 text-left text-sm font-semibold text-white">
-                  #
-                </th>
-                <th scope="col" className="pl-1 py-4 w-1/3 text-left text-sm font-semibold text-white">
-                  Title
-                </th>
-                <th scope="col" className="pl-3 py-4 w-1/3 text-left text-sm font-semibold text-white">
-                  Album
-                </th>
-                <th scope="col" className="pl-3 py-4 text-left text-sm font-semibold text-white">
-                  Date Added
-                </th>
+                <th scope="col" className="hidden md:table-cell py-4 w-8 text-left text-sm font-semibold text-white">#</th>
+                <th scope="col" className="pl-1 py-4 w-1/3 text-left text-sm font-semibold text-white">Title</th>
+                <th scope="col" className="hidden md:table-cell pl-3 py-4 w-1/3 text-left text-sm font-semibold text-white">Album</th>
+                <th scope="col" className="hidden md:table-cell pl-3 py-4 text-left text-sm font-semibold text-white">Date Added</th>
                 <th scope="col" className="py-4 pl-3 pr-4 sm:pr-0">
-                  <MdAccessTime size={20} className="text-white" />
+                  <MdAccessTime size={20} className="text-white hidden md:block" />
                 </th>
               </tr>
             </thead>
