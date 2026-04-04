@@ -13,8 +13,10 @@ export default function Header() {
 
   return (
     <header className="flex items-center justify-between bg-sapphire text-moon px-4 py-3 shadow">
-      <span>JKX</span>
-      <div className="flex items-center gap-3 w-1/2">
+      <span className="font-bold tracking-widest text-lg">JKX</span>
+
+      {/* Search + AddMenu — desktop only */}
+      <div className="hidden md:flex items-center gap-3 w-1/2">
         <input
           type="text"
           placeholder="Search music, artists..."
@@ -22,9 +24,13 @@ export default function Header() {
         />
         <AddMenu />
       </div>
-      <div className="flex items-center gap-4">
-        <button className="text-amethyst hover:text-moon transition">🔔</button>
-        <span className="font-semibold">{user?.displayName || 'User'}</span>
+
+      <div className="flex items-center gap-3">
+        {/* AddMenu visible on mobile only */}
+        <div className="md:hidden">
+          <AddMenu />
+        </div>
+        <span className="hidden md:inline font-semibold">{user?.displayName || 'User'}</span>
         <Link to="/settings" aria-label="Settings">
           <img
             src={avatarSrc}
