@@ -11,6 +11,7 @@ import { PlaylistModalProvider } from '../components/PlaylistModal';
 import LoginForm from '../features/auth/LoginForm';
 import RegisterForm from '../features/auth/RegisterForm';
 import Dashboard from '../features/dashboard/Dashboard';
+import SettingsPage from '../features/settings/SettingsPage';
 import ProtectedRoute from '../components/ProtectedRoute';
 
 
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/register" element={<RegisterForm />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Routes>
