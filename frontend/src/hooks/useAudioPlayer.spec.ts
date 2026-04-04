@@ -28,7 +28,8 @@ describe('useAudioPlayer', () => {
 
   it('should fetch audio and create blob URL when streamUrl and token are provided', async () => {
     const mockBlob = new Blob(['audio'], { type: 'audio/mpeg' });
-    mockFetch.mockResolvedValue({ ok: true, blob: () => Promise.resolve(mockBlob) });
+    const headers = new Headers({ 'content-type': 'audio/mpeg' });
+    mockFetch.mockResolvedValue({ ok: true, headers, blob: () => Promise.resolve(mockBlob) });
 
     const { result } = renderHook(() => useAudioPlayer('/stream/1', 'my-token'));
 
@@ -66,7 +67,8 @@ describe('useAudioPlayer', () => {
 
   it('should revoke object URL on cleanup', () => {
     const mockBlob = new Blob(['audio'], { type: 'audio/mpeg' });
-    mockFetch.mockResolvedValue({ ok: true, blob: () => Promise.resolve(mockBlob) });
+    const headers = new Headers({ 'content-type': 'audio/mpeg' });
+    mockFetch.mockResolvedValue({ ok: true, headers, blob: () => Promise.resolve(mockBlob) });
 
     const { unmount } = renderHook(() => useAudioPlayer('/stream/1', 'token'));
 

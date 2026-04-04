@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 import { RootState } from '../store/store';
 import { setTrack, setRepeat, setShuffle, toggleQueue } from '../store/playerSlice';
@@ -21,7 +21,8 @@ export default function Player() {
   const dispatch = useDispatch();
   const { currentTrack, queue, repeat, shuffle, showQueue } = useSelector((state: RootState) => state.player);
   const token = useSelector((state: RootState) => state.auth.token);
-  const streamUrl = `${import.meta.env.VITE_API_URL}/songs/${currentTrack?.id}/stream`;
+  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const streamUrl = `${apiBase}/songs/${currentTrack?.id}/stream`;
 
   const {
     audioRef,
@@ -35,6 +36,9 @@ export default function Player() {
   } = useAudioPlayer(currentTrack?.id ? streamUrl : '' , token ?? '');
 
   const [volume, setVolume] = useState(1);
+  // Track ID present when this component first mounted (from localStorage hydration).
+  // Auto-play is skipped for that ID to avoid the NotAllowedError on page load.
+  const mountedTrackId = useRef(currentTrack?.id ?? null);
 
   // Repeat/Shuffle Handlers
   const toggleRepeat = useCallback(() => {
@@ -97,13 +101,13 @@ export default function Player() {
   };
 
   useEffect(() => {
-    if (blobUrl && audioRef.current) {
-      play();
-    }
+    if (!blobUrl || !audioRef.current) return;
+    if (currentTrack?.id === mountedTrackId.current) return;
+    play();
   }, [blobUrl]);
 
   return (
-    <footer className="fixed bottom-0 w-full bg-shadow bg-opacity-95 flex items-center px-6 py-4 z-10">
+    <footer className="hidden md:flex fixed bottom-0 w-full bg-shadow bg-opacity-95 items-center px-6 py-4 z-10">
       {/* Audio element */}
       {blobUrl && (
         <audio
