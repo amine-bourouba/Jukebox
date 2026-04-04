@@ -72,12 +72,12 @@ export function PlaylistModalProvider({ children }: { children: React.ReactNode 
     <PlaylistModalContext.Provider value={{ showCreatePlaylist, showEditPlaylist }}>
       {children}
       {isOpen && (
-        <div className="fixed inset-0 z-[10002] flex items-center justify-center">
+        <div className="fixed inset-0 z-[10002] flex items-stretch md:items-center justify-center">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={handleClose}
           />
-          <div className="relative bg-gradient-to-br from-midnight via-sapphire to-amethyst border border-white/10 rounded-lg shadow-2xl max-w-md w-full mx-4 p-6 animate-scale-up">
+          <div className="relative bg-gradient-to-br from-midnight via-sapphire to-amethyst border border-white/10 shadow-2xl w-full p-6 animate-scale-up rounded-none h-full overflow-y-auto md:rounded-lg md:max-w-md md:mx-4 md:h-auto">
             <h3 className="text-xl font-bold text-white mb-4">
               {mode === 'create' ? 'Create Playlist' : 'Edit Playlist'}
             </h3>
