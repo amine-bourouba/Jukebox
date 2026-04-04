@@ -8,6 +8,7 @@ import { EditSongModalProvider } from '../components/EditSongModal';
 import { UploadSongModalProvider } from '../components/UploadSongModal';
 import { PlaylistModalProvider } from '../components/PlaylistModal';
 
+import MobilePlayer from '../components/MobilePlayer';
 import LoginForm from '../features/auth/LoginForm';
 import RegisterForm from '../features/auth/RegisterForm';
 import Dashboard from '../features/dashboard/Dashboard';
@@ -34,6 +35,7 @@ export default function App() {
             </Routes>
             
               <ContextMenu />
+            <MobilePlayer />
             </ContextMenuProvider>
             </PlaylistModalProvider>
           </UploadSongModalProvider>

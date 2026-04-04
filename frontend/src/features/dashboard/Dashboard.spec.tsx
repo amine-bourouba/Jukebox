@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
@@ -7,6 +7,19 @@ import authReducer from '../../store/authSlice';
 import playerReducer from '../../store/playerSlice';
 import songsReducer from '../../store/songSlice';
 import historyReducer from '../../store/historySlice';
+import artistsReducer from '../../store/artistSlice';
+
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  });
+});
 
 vi.mock('../../components/Header', () => ({
   default: () => <div data-testid="header">Header</div>,
@@ -33,7 +46,7 @@ import Dashboard from './Dashboard';
 
 function createStore(playerOverrides: any = {}) {
   return configureStore({
-    reducer: { auth: authReducer, player: playerReducer, songs: songsReducer, history: historyReducer },
+    reducer: { auth: authReducer, player: playerReducer, songs: songsReducer, history: historyReducer, artists: artistsReducer },
     preloadedState: {
       auth: { user: null, token: 'jwt', refreshToken: null, loading: false, error: null },
       player: {
@@ -48,6 +61,7 @@ function createStore(playerOverrides: any = {}) {
         ...playerOverrides,
       },
       songs: { filterOptions: {}, filter: { type: 'all', value: '' }, songs: [], likedSongIds: [] },
+      artists: { artists: [], selectedArtistId: null, followedArtistIds: [], loading: false },
     },
   });
 }
