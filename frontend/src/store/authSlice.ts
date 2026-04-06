@@ -130,6 +130,7 @@ const authSlice = createSlice({
         localStorage.setItem('token', action.payload.token);
         localStorage.setItem('refreshToken', action.payload.refreshToken);
         localStorage.setItem('userId', action.payload.user.id);
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
@@ -147,6 +148,7 @@ const authSlice = createSlice({
         localStorage.setItem('token', action.payload.token);
         localStorage.setItem('refreshToken', action.payload.refreshToken);
         localStorage.setItem('userId', action.payload.user.id);
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -159,6 +161,7 @@ const authSlice = createSlice({
         localStorage.setItem('token', action.payload.token);
         localStorage.setItem('refreshToken', action.payload.refreshToken);
         localStorage.setItem('userId', action.payload.user.id);
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(refreshToken.rejected, (state, action) => {
         state.error = action.payload as string;
