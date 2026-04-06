@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { configureStore } from '@reduxjs/toolkit';
@@ -68,14 +68,37 @@ describe('Header', () => {
     expect(avatar.src).toContain('/bob.png');
   });
 
-  it('should render default avatar when no avatarUrl', () => {
+  it('should render icon when no avatarUrl', () => {
     const user = { id: 'u1', displayName: 'Bob', email: 'b@c.com' };
     render(
       <Provider store={createStore(user)}>
         <MemoryRouter><Header /></MemoryRouter>
       </Provider>
     );
-    const avatar = screen.getByAltText('avatar') as HTMLImageElement;
-    expect(avatar.src).toContain('/default-avatar.png');
+    expect(screen.queryByAltText('avatar')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'User menu' })).toBeInTheDocument();
+  });
+
+  it('should show Settings and Logout options when avatar is clicked', () => {
+    render(
+      <Provider store={createStore()}>
+        <MemoryRouter><Header /></MemoryRouter>
+      </Provider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'User menu' }));
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Logout')).toBeInTheDocument();
+  });
+
+  it('should close dropdown when clicking outside', () => {
+    render(
+      <Provider store={createStore()}>
+        <MemoryRouter><Header /></MemoryRouter>
+      </Provider>
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'User menu' }));
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
   });
 });

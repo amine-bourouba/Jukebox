@@ -1,15 +1,10 @@
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
 import { RootState } from '../store/store';
 import AddMenu from './AddMenu';
+import UserMenu from './UserMenu';
 
 export default function Header() {
   const user = useSelector((state: RootState) => state.auth.user);
-  const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-  const avatarSrc = user?.avatarUrl
-    ? `${apiBase.replace('/api', '')}/${user.avatarUrl}`
-    : '/default-avatar.png';
 
   return (
     <header className="flex items-center justify-between bg-sapphire text-moon px-4 py-3 shadow">
@@ -31,13 +26,7 @@ export default function Header() {
           <AddMenu />
         </div>
         <span className="hidden md:inline font-semibold">{user?.displayName || 'User'}</span>
-        <Link to="/settings" aria-label="Settings">
-          <img
-            src={avatarSrc}
-            alt="avatar"
-            className="w-8 h-8 rounded-full border-2 border-amethyst object-cover hover:opacity-80 transition"
-          />
-        </Link>
+        <UserMenu />
       </div>
     </header>
   );
