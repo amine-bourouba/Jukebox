@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { RootState } from '../store/store';
 import { setTrack, setRepeat, setShuffle, toggleQueue } from '../store/playerSlice';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 import {
   MdShuffle,
@@ -21,6 +22,7 @@ export default function Player() {
   const dispatch = useDispatch();
   const { currentTrack, queue, repeat, shuffle, showQueue } = useSelector((state: RootState) => state.player);
   const token = useSelector((state: RootState) => state.auth.token);
+  const isMobile = useIsMobile();
   const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
   const streamUrl = `${apiBase}/songs/${currentTrack?.id}/stream`;
 
@@ -33,7 +35,7 @@ export default function Player() {
     duration,
     seek,
     blobUrl,
-  } = useAudioPlayer(currentTrack?.id ? streamUrl : '' , token ?? '');
+  } = useAudioPlayer((!isMobile && currentTrack?.id) ? streamUrl : '', token ?? '');
 
   const [volume, setVolume] = useState(1);
   // Track ID present when this component first mounted (from localStorage hydration).

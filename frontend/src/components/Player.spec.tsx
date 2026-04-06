@@ -24,6 +24,10 @@ vi.mock('../hooks/useAudioPlayer', () => ({
   })),
 }));
 
+vi.mock('../hooks/useIsMobile', () => ({
+  useIsMobile: vi.fn(() => false),
+}));
+
 // Must import after mock setup
 import Player from './Player';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
