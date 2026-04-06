@@ -24,6 +24,10 @@ vi.mock('../hooks/useAudioPlayer', () => ({
   })),
 }));
 
+vi.mock('../hooks/useIsMobile', () => ({
+  useIsMobile: vi.fn(() => true),
+}));
+
 import MobilePlayer from './MobilePlayer';
 
 const track = { id: 's1', title: 'Test Song', artist: 'Test Artist', coverUrl: '' };

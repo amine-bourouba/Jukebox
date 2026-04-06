@@ -11,6 +11,7 @@ import { RootState } from '../store/store';
 import { setTrack, setRepeat, setShuffle } from '../store/playerSlice';
 import { likeSong, unlikeSong } from '../store/songSlice';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 export default function MobilePlayer() {
   const dispatch = useDispatch();
@@ -18,12 +19,13 @@ export default function MobilePlayer() {
   const token = useSelector((state: RootState) => state.auth.token);
   const likedSongIds = useSelector((state: RootState) => state.songs.likedSongIds);
   const [expanded, setExpanded] = useState(false);
+  const isMobile = useIsMobile();
 
   const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
   const streamUrl = `${apiBase}/songs/${currentTrack?.id}/stream`;
 
   const { audioRef, isPlaying, play, pause, progress, duration, seek, blobUrl } =
-    useAudioPlayer(currentTrack?.id ? streamUrl : '', token ?? '');
+    useAudioPlayer((isMobile && currentTrack?.id) ? streamUrl : '', token ?? '');
 
   const isLiked = currentTrack ? likedSongIds.includes(currentTrack.id) : false;
   const mountedTrackId = useRef(currentTrack?.id ?? null);
