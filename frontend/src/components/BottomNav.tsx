@@ -1,13 +1,11 @@
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { IoMusicalNotes, IoPersonCircle } from 'react-icons/io5';
 import { TbPlaylist } from 'react-icons/tb';
-import { MdSettings } from 'react-icons/md';
 
 const items = [
   { to: '/dashboard', label: 'Library', Icon: IoMusicalNotes },
   { to: '/dashboard?view=playlists', label: 'Playlists', Icon: TbPlaylist },
   { to: '/dashboard?view=artists', label: 'Artists', Icon: IoPersonCircle },
-  { to: '/settings', label: 'Settings', Icon: MdSettings },
 ] as const;
 
 export default function BottomNav() {

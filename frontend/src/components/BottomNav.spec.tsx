@@ -24,12 +24,12 @@ function renderNav(path = '/dashboard', search = '') {
 }
 
 describe('BottomNav', () => {
-  it('renders all four nav items', () => {
+  it('renders Library, Playlists and Artists nav items', () => {
     renderNav();
     expect(screen.getByLabelText('Library')).toBeInTheDocument();
     expect(screen.getByLabelText('Playlists')).toBeInTheDocument();
     expect(screen.getByLabelText('Artists')).toBeInTheDocument();
-    expect(screen.getByLabelText('Settings')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Settings')).not.toBeInTheDocument();
   });
 
   it('highlights Library when on /dashboard with no view param', () => {
@@ -50,9 +50,4 @@ describe('BottomNav', () => {
     expect(screen.getByLabelText('Library').className).not.toContain('text-amethyst');
   });
 
-  it('highlights Settings when on /settings', () => {
-    renderNav('/settings');
-    expect(screen.getByLabelText('Settings').className).toContain('text-amethyst');
-    expect(screen.getByLabelText('Library').className).not.toContain('text-amethyst');
-  });
 });
