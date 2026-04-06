@@ -127,13 +127,10 @@ export default function Dashboard() {
     <div className="h-screen bg-gradient-to-br from-midnight via-sapphire to-amethyst flex flex-col overflow-hidden">
       <Header />
       <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* Sidebar — hidden on mobile */}
-        <div className="hidden md:block">
-          <Sidebar />
-        </div>
+        <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden min-h-0">
           {/* pb-20 on mobile: space for mini-player + bottom nav (both fixed) */}
-          <div className="flex-1 flex flex-row overflow-hidden min-h-0 pb-20 md:pb-20">
+          <div className="flex-1 flex flex-row overflow-hidden min-h-0 pb-20 md:pb-0">
             <div className={`${showPanel ? 'md:basis-3/4' : ''} flex-1 overflow-hidden`}>
               {mainContent}
             </div>

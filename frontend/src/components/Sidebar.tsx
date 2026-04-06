@@ -100,7 +100,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-1/5 bg-midnight flex flex-col py-6 px-4 shadow-lg">
+    <aside className="hidden md:flex w-1/5 bg-midnight flex-col py-6 px-4 shadow-lg shrink-0">
       {/* Pills */}
       <div className="flex gap-2 mb-4">
         {pills.map(pill => (
