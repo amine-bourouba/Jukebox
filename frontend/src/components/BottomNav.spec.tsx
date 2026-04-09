@@ -50,4 +50,13 @@ describe('BottomNav', () => {
     expect(screen.getByLabelText('Library').className).not.toContain('text-amethyst');
   });
 
+  it('renders nothing when not on /dashboard', () => {
+    const { container } = renderNav('/settings');
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders nothing when on /login', () => {
+    const { container } = renderNav('/login');
+    expect(container).toBeEmptyDOMElement();
+  });
 });

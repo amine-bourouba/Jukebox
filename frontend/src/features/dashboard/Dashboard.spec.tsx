@@ -103,10 +103,10 @@ describe('Dashboard', () => {
     expect(wrapper.className).toContain('flex-1');
   });
 
-  it('should add md:basis-3/4 class to SongList wrapper when track is playing', () => {
+  it('should add lg:basis-3/4 class to SongList wrapper when track is playing', () => {
     const track = { id: 's1', title: 'Track', artist: 'A', streamUrl: '' };
     renderDashboard(createStore({ currentTrack: track }));
     const wrapper = screen.getByTestId('song-list').parentElement!;
-    expect(wrapper.className).toContain('md:basis-3/4');
+    expect(wrapper.className).toContain('lg:basis-3/4');
   });
 });

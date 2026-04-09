@@ -8,7 +8,7 @@ import {
 import { IoMusicalNotes } from 'react-icons/io5';
 
 import { RootState } from '../store/store';
-import { setTrack, setRepeat, setShuffle } from '../store/playerSlice';
+import { setTrack, setRepeat, setShuffle, toggleQueue } from '../store/playerSlice';
 import { likeSong, unlikeSong } from '../store/songSlice';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -84,7 +84,7 @@ export default function MobilePlayer() {
       {/* ── Mini bar (always visible on mobile when track loaded) ── */}
       {!expanded && (
         <div
-          className="md:hidden fixed bottom-14 left-0 right-0 bg-shadow border-t border-white/10 z-20 flex items-center px-3 py-2 gap-3 cursor-pointer"
+          className="lg:hidden fixed bottom-14 left-0 right-0 bg-shadow border-t border-white/10 z-20 flex items-center px-3 py-2 gap-3 cursor-pointer"
           onClick={() => setExpanded(true)}
           role="button"
           aria-label="Open player"
@@ -118,7 +118,7 @@ export default function MobilePlayer() {
 
       {/* ── Full-screen player overlay ── */}
       {expanded && (
-        <div className="md:hidden fixed inset-0 bg-midnight z-30 flex flex-col">
+        <div className="lg:hidden fixed inset-0 bg-midnight z-30 flex flex-col">
           {/* Top bar */}
           <div className="flex items-center justify-between px-4 pt-10 pb-2 shrink-0">
             <button onClick={() => setExpanded(false)} aria-label="Collapse player" className="text-silver p-2">
@@ -212,7 +212,13 @@ export default function MobilePlayer() {
 
             {/* Queue icon */}
             <div className="flex justify-end">
-              <MdQueueMusic size={22} className="text-silver/50" />
+              <button
+                onClick={() => dispatch(toggleQueue())}
+                aria-label="Show queue"
+                className="p-1 text-silver/50 hover:text-silver transition-colors"
+              >
+                <MdQueueMusic size={22} />
+              </button>
             </div>
           </div>
         </div>

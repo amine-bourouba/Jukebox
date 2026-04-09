@@ -53,7 +53,7 @@ export default function UserMenu() {
         <div className="absolute right-0 mt-2 w-44 bg-shadow border border-white/10 rounded-lg shadow-xl z-50 py-1">
           {/* Display name — mobile only */}
           {user?.displayName && (
-            <div className="md:hidden px-4 py-2 text-sm font-semibold text-white border-b border-white/10 truncate">
+            <div className="lg:hidden px-4 py-2 text-sm font-semibold text-white border-b border-white/10 truncate">
               {user.displayName}
             </div>
           )}

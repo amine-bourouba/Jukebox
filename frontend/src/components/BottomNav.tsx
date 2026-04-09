@@ -13,8 +13,10 @@ export default function BottomNav() {
   const [searchParams] = useSearchParams();
   const view = searchParams.get('view');
 
+  if (pathname !== '/dashboard') return null;
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-midnight border-t border-white/10 z-20 flex">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-midnight border-t border-white/10 z-20 flex">
       {items.map(({ to, label, Icon }) => {
         const [toPath, toQuery] = to.split('?');
         const toView = toQuery ? new URLSearchParams(toQuery).get('view') : null;

@@ -11,7 +11,7 @@ export default function Header() {
       <span className="font-bold tracking-widest text-lg">JKX</span>
 
       {/* Search + AddMenu — desktop only */}
-      <div className="hidden md:flex items-center gap-3 w-1/2">
+      <div className="hidden lg:flex items-center gap-3 w-1/2">
         <input
           type="text"
           placeholder="Search music, artists..."
@@ -22,10 +22,10 @@ export default function Header() {
 
       <div className="flex items-center gap-3">
         {/* AddMenu visible on mobile only */}
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <AddMenu />
         </div>
-        <span className="hidden md:inline font-semibold">{user?.displayName || 'User'}</span>
+        <span className="hidden lg:inline font-semibold">{user?.displayName || 'User'}</span>
         <UserMenu />
       </div>
     </header>

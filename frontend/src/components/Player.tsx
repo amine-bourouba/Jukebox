@@ -109,7 +109,7 @@ export default function Player() {
   }, [blobUrl]);
 
   return (
-    <footer className="hidden md:flex fixed bottom-0 w-full bg-shadow bg-opacity-95 items-center px-6 py-4 z-10">
+    <footer className="hidden lg:flex fixed bottom-0 w-full bg-shadow bg-opacity-95 items-center px-6 py-4 z-10">
       {/* Audio element */}
       {blobUrl && (
         <audio
