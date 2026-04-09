@@ -129,4 +129,25 @@ describe('ArtistHero', () => {
     expect(img).toBeTruthy();
     expect(img.src).toContain('/artist.jpg');
   });
+
+  it('disables play button when songCount is 0', () => {
+    renderHero({ songCount: 0 });
+    expect(screen.getByRole('button', { name: 'Play all songs' })).toBeDisabled();
+  });
+
+  it('disables shuffle button when songCount is 0', () => {
+    renderHero({ songCount: 0 });
+    expect(screen.getByRole('button', { name: 'Shuffle songs' })).toBeDisabled();
+  });
+
+  it('enables play button when songCount > 0', () => {
+    renderHero({ songCount: 3 });
+    expect(screen.getByRole('button', { name: 'Play all songs' })).not.toBeDisabled();
+  });
+
+  it('does not call onPlay when play button is disabled', () => {
+    const { props } = renderHero({ songCount: 0 });
+    fireEvent.click(screen.getByRole('button', { name: 'Play all songs' }));
+    expect(props.onPlay).not.toHaveBeenCalled();
+  });
 });

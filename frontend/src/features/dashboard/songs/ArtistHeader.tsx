@@ -41,29 +41,35 @@ export default function ArtistHeader({ artist, songCount, onPlay, onShuffle }: A
         {/* Info + actions */}
         <div className="flex flex-col gap-2 pb-2">
           <p className="text-xs font-bold text-white uppercase tracking-widest">Artist</p>
-          <h1 className="text-6xl font-extrabold text-white leading-tight">{artist?.name ?? ''}</h1>
+          <div className="flex items-center gap-4 flex-wrap">
+            <h1 className="text-6xl font-extrabold text-white leading-tight">{artist?.name ?? ''}</h1>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onPlay}
+                disabled={songCount === 0}
+                aria-label="Play all songs"
+                className="bg-amethyst hover:bg-amethyst/80 active:scale-95 text-moon rounded-full p-3 shadow-lg transition-transform hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                <MdPlayArrow size={32} />
+              </button>
+              <button
+                onClick={onShuffle}
+                disabled={songCount === 0}
+                aria-label="Shuffle songs"
+                className="text-silver hover:text-moon transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <MdShuffle size={28} />
+              </button>
+            </div>
+          </div>
           <p className="text-silver text-sm">
             {songCount} {songCount === 1 ? 'song' : 'songs'}
             {followerCount > 0 && (
               <span className="ml-3">{followerCount.toLocaleString()} {followerCount === 1 ? 'follower' : 'followers'}</span>
             )}
           </p>
-          <div className="flex items-center gap-4 mt-2">
-            <button
-              onClick={onPlay}
-              aria-label="Play all songs"
-              className="bg-amethyst hover:bg-amethyst/80 active:scale-95 text-moon rounded-full p-3 shadow-lg transition-transform hover:scale-105"
-            >
-              <MdPlayArrow size={32} />
-            </button>
-            <button
-              onClick={onShuffle}
-              aria-label="Shuffle songs"
-              className="text-silver hover:text-moon transition-colors"
-            >
-              <MdShuffle size={28} />
-            </button>
-            {artist && (
+          {artist && (
+            <div className="mt-1">
               <button
                 onClick={handleFollow}
                 aria-label={isFollowing ? 'Unfollow artist' : 'Follow artist'}
@@ -75,8 +81,8 @@ export default function ArtistHeader({ artist, songCount, onPlay, onShuffle }: A
               >
                 {isFollowing ? 'Following' : 'Follow'}
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -53,6 +53,12 @@ vi.mock('./SongListItem', () => ({
   ),
 }));
 
+vi.mock('../../../components/SongCard', () => ({
+  default: ({ title, onClick }: any) => (
+    <button data-testid={`song-card-${title}`} onClick={onClick}>{title}</button>
+  ),
+}));
+
 vi.mock('../../../components/ContextMenu/useContextMenu', () => ({
   useContextMenu: () => ({ showContextMenu: vi.fn(), showContextMenuAt: vi.fn() }),
 }));
@@ -191,6 +197,8 @@ describe('ArtistView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockApiSongs([]);
+    // Ensure grid mode so AlbumCards are visible by default
+    localStorage.setItem('viewMode', 'grid');
   });
 
   it('renders ArtistHeader with correct artist name', () => {
@@ -245,6 +253,8 @@ describe('ArtistView', () => {
     render(<Provider store={store}><ArtistView /></Provider>);
     await waitFor(() => screen.getByTestId('card-Debut'));
     fireEvent.click(screen.getByTestId('card-Debut'));
+    // Switch to list view to see SongListItem rows
+    fireEvent.click(screen.getByLabelText('List view'));
     expect(screen.getByTestId('song-row-s1')).toBeInTheDocument();
     expect(screen.queryByTestId('card-Debut')).toBeNull();
   });
@@ -318,11 +328,51 @@ describe('ArtistView', () => {
     render(<Provider store={store}><ArtistView /></Provider>);
     await waitFor(() => screen.getByTestId('card-Album A'));
     fireEvent.click(screen.getByTestId('card-Album A'));
+    fireEvent.click(screen.getByLabelText('List view'));
     fireEvent.click(screen.getByTestId('play-song-s1'));
     const state = store.getState().player;
     expect(state.currentTrack?.id).toBe('s1');
     expect(state.queue).toHaveLength(1);
     expect(state.queue[0].id).toBe('s1');
+  });
+
+  it('dispatches setShuffle(false) and plays album songs when album Play is clicked', async () => {
+    const songs = [makeSong('s1', 'T1', 'Debut'), makeSong('s2', 'T2', 'Debut')];
+    mockApiSongs(songs);
+    const store = createStore();
+    render(<Provider store={store}><ArtistView /></Provider>);
+    await waitFor(() => screen.getByTestId('card-Debut'));
+    fireEvent.click(screen.getByTestId('card-Debut'));
+    // album-level buttons are in the toolbar; use getAllByLabelText to get the album one (index 1, after hero)
+    fireEvent.click(screen.getAllByLabelText('Play all')[0]);
+    const state = store.getState().player;
+    expect(state.shuffle).toBe(false);
+    expect(state.queue).toHaveLength(2);
+    expect(state.currentTrack?.id).toBe('s1');
+  });
+
+  it('dispatches setShuffle(true) when album Shuffle is clicked', async () => {
+    const songs = [makeSong('s1', 'T1', 'Debut'), makeSong('s2', 'T2', 'Debut')];
+    mockApiSongs(songs);
+    const store = createStore();
+    render(<Provider store={store}><ArtistView /></Provider>);
+    await waitFor(() => screen.getByTestId('card-Debut'));
+    fireEvent.click(screen.getByTestId('card-Debut'));
+    fireEvent.click(screen.getAllByLabelText('Shuffle')[0]);
+    const state = store.getState().player;
+    expect(state.shuffle).toBe(true);
+    expect(state.queue).toHaveLength(2);
+  });
+
+  it('switches discography to list view when list toggle clicked', async () => {
+    mockApiSongs([makeSong('s1', 'T1', 'Debut')]);
+    const store = createStore();
+    render(<Provider store={store}><ArtistView /></Provider>);
+    await waitFor(() => screen.getByTestId('card-Debut'));
+    fireEvent.click(screen.getByLabelText('List view'));
+    // list view renders album rows as buttons (not AlbumCards)
+    expect(screen.queryByTestId('card-Debut')).toBeNull();
+    expect(screen.getByText('Debut')).toBeInTheDocument();
   });
 
   it('normalises coverUrl from coverImageUrl when playing', async () => {
