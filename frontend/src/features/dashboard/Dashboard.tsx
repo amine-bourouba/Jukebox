@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { TbPlaylist } from 'react-icons/tb';
@@ -10,7 +10,9 @@ import Header from '../../components/Header';
 import Player from '../../components/Player';
 import SongList from './songs/SongList';
 import SongPreview from './songs/SongPreview';
+import ArtistView from './songs/ArtistView';
 import ViewToggle, { useViewMode } from '../../components/ViewToggle';
+import { useContextMenu } from '../../components/ContextMenu/useContextMenu';
 import { RootState, AppDispatch } from '../../store/store';
 import { fetchPlaylists, fetchSelectedPlaylist, setSelectedPlaylist, toggleQueue } from '../../store/playerSlice';
 import { fetchArtists, setSelectedArtistId, Artist } from '../../store/artistSlice';
@@ -22,8 +24,30 @@ function MobilePlaylistsView() {
   const navigate = useNavigate();
   const playlists = useSelector((state: RootState) => state.player.playlists);
   const [viewMode, setViewMode] = useViewMode();
+  const { showContextMenuAt } = useContextMenu();
+
+  // Long-press support for playlist context menu
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
+  const handleTouchStart = (e: React.TouchEvent, pl: any) => {
+    longPressFired.current = false;
+    const { clientX: x, clientY: y } = e.touches[0];
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      showContextMenuAt(x, y, 'sidebar-playlist', pl);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
 
   const handlePlaylistClick = (playlistId: string) => {
+    if (longPressFired.current) return; // long-press already handled
     dispatch(setSelectedPlaylist(playlistId));
     dispatch(fetchSelectedPlaylist(playlistId));
     navigate('/dashboard');
@@ -51,6 +75,9 @@ function MobilePlaylistsView() {
               <button
                 key={pl.id}
                 onClick={() => handlePlaylistClick(pl.id)}
+                onTouchStart={(e) => handleTouchStart(e, pl)}
+                onTouchEnd={handleTouchEnd}
+                onTouchMove={handleTouchEnd}
                 className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-lg text-left hover:bg-white/10 transition"
               >
                 <TbPlaylist size={32} className="text-amethyst shrink-0" />
@@ -69,6 +96,9 @@ function MobilePlaylistsView() {
               <button
                 key={pl.id}
                 onClick={() => handlePlaylistClick(pl.id)}
+                onTouchStart={(e) => handleTouchStart(e, pl)}
+                onTouchEnd={handleTouchEnd}
+                onTouchMove={handleTouchEnd}
                 className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-lg hover:bg-white/10 transition text-center"
               >
                 <TbPlaylist size={40} className="text-amethyst" />
@@ -94,7 +124,9 @@ function MobileArtistsView() {
   const handleArtistClick = (artist: Artist) => {
     dispatch(setSelectedArtistId(artist.id));
     dispatch(setSongFilter({ type: 'artist', value: artist.name }));
-    navigate('/dashboard');
+    // Stay on the artists URL — the Dashboard mainContent switches to ArtistView
+    // without re-triggering the useEffect (URL doesn't change)
+    navigate('/dashboard?view=artists');
   };
 
   return (
@@ -168,6 +200,7 @@ export default function Dashboard() {
   const view = isMobile ? searchParams.get('view') : null;
 
   const { currentTrack, showQueue } = useSelector((state: RootState) => state.player);
+  const selectedArtistId = useSelector((state: RootState) => state.artists.selectedArtistId);
   const showPanel = !!currentTrack && showQueue;
 
   useEffect(() => {
@@ -175,6 +208,8 @@ export default function Dashboard() {
     if (view === 'playlists') {
       dispatch(fetchPlaylists());
     } else if (view === 'artists') {
+      // Entering the artists tab always resets to the list (clears any prior selection)
+      dispatch(setSelectedArtistId(null));
       dispatch(fetchArtists());
     } else {
       dispatch(setSongFilter({ type: 'all', value: '' }));
@@ -183,8 +218,14 @@ export default function Dashboard() {
     }
   }, [view, isMobile, dispatch]);
 
+  const handleArtistBack = () => {
+    dispatch(setSelectedArtistId(null));
+    dispatch(setSongFilter({ type: 'all', value: '' }));
+  };
+
   const mainContent =
     view === 'playlists' ? <MobilePlaylistsView /> :
+    view === 'artists' && selectedArtistId ? <ArtistView onBack={handleArtistBack} /> :
     view === 'artists'   ? <MobileArtistsView /> :
                            <SongList />;
 

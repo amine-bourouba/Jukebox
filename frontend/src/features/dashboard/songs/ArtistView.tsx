@@ -60,7 +60,7 @@ function normaliseTrack(song: any) {
   return { ...song, coverUrl: song.coverImageUrl || song.thumbnail || song.coverUrl || '' };
 }
 
-export default function ArtistView() {
+export default function ArtistView({ onBack }: { onBack?: () => void } = {}) {
   const dispatch = useDispatch<AppDispatch>();
   const { showContextMenu } = useContextMenu();
   const selectedArtistId = useSelector((state: RootState) => state.artists.selectedArtistId);
@@ -134,9 +134,19 @@ export default function ArtistView() {
 
   return (
     <div
-      className="flex flex-col h-full overflow-hidden pt-8 transition-[background] duration-700"
+      className={`flex flex-col h-full overflow-hidden transition-[background] duration-700 ${onBack ? 'pt-2' : 'pt-8'}`}
       style={headerGradient}
     >
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 text-silver hover:text-moon transition-colors text-sm px-4 sm:px-6 py-2 shrink-0"
+          aria-label="Back to artists"
+        >
+          <MdArrowBack size={18} />
+          Artists
+        </button>
+      )}
       <ArtistHeader
         artist={artist}
         songCount={songs.length}
