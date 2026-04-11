@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../store/authSlice';
-import playerReducer from '../store/playerSlice';
+import playerReducer, { setTrack } from '../store/playerSlice';
 import songsReducer from '../store/songSlice';
 
 const mockPlay = vi.fn();
@@ -115,5 +115,68 @@ describe('MobilePlayer', () => {
     renderPlayer();
     fireEvent.click(screen.getByRole('button', { name: 'Open player' }));
     expect(screen.getByRole('button', { name: 'Like' })).toBeInTheDocument();
+  });
+
+  it('does NOT autoplay on initial mount (hydrated from localStorage)', () => {
+    renderPlayer();
+    expect(mockPlay).not.toHaveBeenCalled();
+  });
+
+  it('autoplays when setTrack dispatches the SAME id after hydration (Play All bug)', async () => {
+    // Regression: the autoplay guard used to compare track ids, so dispatching
+    // setTrack with a matching id was skipped forever. Now compares references,
+    // so any new dispatch plays.
+    const store = createStore();
+    render(
+      <Provider store={store}>
+        <MobilePlayer />
+      </Provider>
+    );
+    expect(mockPlay).not.toHaveBeenCalled();
+    act(() => {
+      store.dispatch(setTrack({ ...track }));
+    });
+    await waitFor(() => {
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('rewinds to 0 when setTrack re-fires on the already-loaded song', async () => {
+    // Regression: Play All on a playlist whose first track is the already-playing
+    // song must visibly restart, since the same blobUrl means the <audio> element
+    // doesn't reset on its own.
+    const store = createStore();
+    render(
+      <Provider store={store}>
+        <MobilePlayer />
+      </Provider>
+    );
+    // React assigned the real <audio> element to the ref on mount.
+    const audio = mockAudioRef.current as HTMLAudioElement;
+    Object.defineProperty(audio, 'readyState', { get: () => 2, configurable: true });
+    audio.currentTime = 42;
+    act(() => {
+      store.dispatch(setTrack({ ...track }));
+    });
+    await waitFor(() => {
+      expect(audio.currentTime).toBe(0);
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('autoplays when setTrack dispatches a different id after hydration', async () => {
+    const store = createStore();
+    render(
+      <Provider store={store}>
+        <MobilePlayer />
+      </Provider>
+    );
+    expect(mockPlay).not.toHaveBeenCalled();
+    act(() => {
+      store.dispatch(setTrack({ id: 's2', title: 'Other', artist: 'Other', coverUrl: '' }));
+    });
+    await waitFor(() => {
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
   });
 });

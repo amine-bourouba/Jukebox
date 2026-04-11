@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../store/authSlice';
@@ -9,7 +9,7 @@ import playerReducer from '../store/playerSlice';
 const mockPlay = vi.fn();
 const mockPause = vi.fn();
 const mockSeek = vi.fn();
-const mockAudioRef = { current: { volume: 1 } };
+const mockAudioRef = { current: { volume: 1, readyState: 2, currentTime: 30 } };
 
 vi.mock('../hooks/useAudioPlayer', () => ({
   useAudioPlayer: vi.fn(() => ({
@@ -31,6 +31,7 @@ vi.mock('../hooks/useIsMobile', () => ({
 // Must import after mock setup
 import Player from './Player';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { setTrack } from '../store/playerSlice';
 
 function createStore(playerState: any = {}, authState: any = {}) {
   return configureStore({
@@ -280,5 +281,71 @@ describe('Player', () => {
     renderPlayer({ queue: [], currentTrack: { id: 's1', title: 'Test Song', artist: 'Test Artist', streamUrl: '' } });
     fireEvent.click(screen.getByTitle('Next'));
     expect(screen.getByText('Test Song')).toBeInTheDocument();
+  });
+
+  it('should NOT autoplay on initial mount (hydrated from localStorage)', () => {
+    // Default mock returns a ready blobUrl, so the autoplay effect will run.
+    // With a hydrated currentTrack the effect must be a no-op to avoid NotAllowedError.
+    renderPlayer();
+    expect(mockPlay).not.toHaveBeenCalled();
+  });
+
+  it('should autoplay when setTrack dispatches the SAME id after hydration (Play All bug)', async () => {
+    // Regression: previously the autoplay guard compared track ids, so dispatching
+    // setTrack with the same id (e.g. Play All where tracks[0] === currentTrack)
+    // was skipped forever. It now compares references, so any new dispatch plays.
+    const store = createStore();
+    render(
+      <Provider store={store}>
+        <Player />
+      </Provider>
+    );
+    expect(mockPlay).not.toHaveBeenCalled(); // hydration skip
+    // Dispatch setTrack with the SAME id but as a new object reference.
+    act(() => {
+      store.dispatch(setTrack({ id: 's1', title: 'Test Song', artist: 'Test Artist', streamUrl: '' }));
+    });
+    await waitFor(() => {
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('should rewind to 0 when setTrack re-fires on the already-loaded song', async () => {
+    // Regression: Play All on a playlist whose first track is the already-playing
+    // song must visibly restart — same blobUrl means the <audio> element doesn't
+    // reset on its own, so we manually reset currentTime.
+    const store = createStore();
+    render(
+      <Provider store={store}>
+        <Player />
+      </Provider>
+    );
+    // React has assigned the real <audio> element to the ref on mount.
+    const audio = mockAudioRef.current as unknown as HTMLAudioElement;
+    Object.defineProperty(audio, 'readyState', { get: () => 2, configurable: true });
+    audio.currentTime = 42;
+    act(() => {
+      store.dispatch(setTrack({ id: 's1', title: 'Test Song', artist: 'Test Artist', streamUrl: '' }));
+    });
+    await waitFor(() => {
+      expect(audio.currentTime).toBe(0);
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('should autoplay when setTrack dispatches a different id after hydration', async () => {
+    const store = createStore();
+    render(
+      <Provider store={store}>
+        <Player />
+      </Provider>
+    );
+    expect(mockPlay).not.toHaveBeenCalled();
+    act(() => {
+      store.dispatch(setTrack({ id: 's2', title: 'Next Song', artist: 'Other Artist', streamUrl: '' }));
+    });
+    await waitFor(() => {
+      expect(mockPlay).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -38,9 +38,11 @@ export default function Player() {
   } = useAudioPlayer((!isMobile && currentTrack?.id) ? streamUrl : '', token ?? '');
 
   const [volume, setVolume] = useState(1);
-  // Track ID present when this component first mounted (from localStorage hydration).
-  // Auto-play is skipped for that ID to avoid the NotAllowedError on page load.
-  const mountedTrackId = useRef(currentTrack?.id ?? null);
+  // The exact currentTrack reference present when this component first mounted
+  // (from localStorage hydration). Autoplay is skipped for that reference to avoid
+  // NotAllowedError on page load. Any subsequent setTrack dispatch produces a NEW
+  // reference (even for the same id), so user-initiated plays are never skipped.
+  const hydratedTrackRef = useRef(currentTrack);
 
   // Repeat/Shuffle Handlers
   const toggleRepeat = useCallback(() => {
@@ -104,9 +106,18 @@ export default function Player() {
 
   useEffect(() => {
     if (!blobUrl || !audioRef.current) return;
-    if (currentTrack?.id === mountedTrackId.current) return;
+    // Skip autoplay only for the exact hydrated reference (page load).
+    // Any subsequent setTrack dispatch creates a new reference → plays,
+    // even when the id matches (e.g. Play All on the already-loaded track).
+    if (currentTrack === hydratedTrackRef.current) return;
+    // Rewind to the start so Play All on a playlist whose first track is the
+    // already-playing song visibly restarts playback (same blobUrl, same <audio>,
+    // so the browser wouldn't reset the playhead on its own).
+    if (audioRef.current.readyState >= 1) {
+      audioRef.current.currentTime = 0;
+    }
     play();
-  }, [blobUrl]);
+  }, [blobUrl, currentTrack]);
 
   return (
     <footer className="hidden lg:flex fixed bottom-0 w-full bg-shadow bg-opacity-95 items-center px-6 py-4 z-10">

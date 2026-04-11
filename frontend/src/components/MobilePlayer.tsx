@@ -28,7 +28,11 @@ export default function MobilePlayer() {
     useAudioPlayer((isMobile && currentTrack?.id) ? streamUrl : '', token ?? '');
 
   const isLiked = currentTrack ? likedSongIds.includes(currentTrack.id) : false;
-  const mountedTrackId = useRef(currentTrack?.id ?? null);
+  // The exact currentTrack reference at first mount (from localStorage hydration).
+  // Autoplay is skipped only for that reference to avoid NotAllowedError on page
+  // load. Any subsequent setTrack dispatch creates a new reference → plays, even
+  // when the id matches (e.g. Play All on the already-loaded track).
+  const hydratedTrackRef = useRef(currentTrack);
 
   const formatTime = (sec: number) =>
     isNaN(sec) ? '0:00' : `${Math.floor(sec / 60)}:${('0' + Math.floor(sec % 60)).slice(-2)}`;
@@ -59,9 +63,14 @@ export default function MobilePlayer() {
 
   useEffect(() => {
     if (!blobUrl || !audioRef.current) return;
-    if (currentTrack?.id === mountedTrackId.current) return;
+    if (currentTrack === hydratedTrackRef.current) return;
+    // Rewind so re-dispatching setTrack on the already-loaded song (e.g. Play All
+    // on a playlist whose first track is the current one) visibly restarts.
+    if (audioRef.current.readyState >= 1) {
+      audioRef.current.currentTime = 0;
+    }
     play();
-  }, [blobUrl]);
+  }, [blobUrl, currentTrack]);
 
   const handleSeekBar = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!duration) return;
