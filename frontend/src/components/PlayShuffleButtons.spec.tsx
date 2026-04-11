@@ -40,20 +40,35 @@ describe('PlayShuffleButtons', () => {
     expect(onPlay).not.toHaveBeenCalled();
   });
 
+  it('does not call onShuffle when disabled and clicked', () => {
+    render(<PlayShuffleButtons onPlay={onPlay} onShuffle={onShuffle} disabled />);
+    fireEvent.click(screen.getByLabelText('Shuffle'));
+    expect(onShuffle).not.toHaveBeenCalled();
+  });
+
   it('enables buttons when disabled=false (default)', () => {
     render(<PlayShuffleButtons onPlay={onPlay} onShuffle={onShuffle} />);
     expect(screen.getByLabelText('Play all')).not.toBeDisabled();
     expect(screen.getByLabelText('Shuffle')).not.toBeDisabled();
   });
 
-  it('renders compact round buttons when compact=true', () => {
+  it('renders compact round buttons for both when compact=true', () => {
     render(<PlayShuffleButtons onPlay={onPlay} onShuffle={onShuffle} compact />);
     expect(screen.getByLabelText('Play all').className).toContain('w-9');
     expect(screen.getByLabelText('Play all').className).toContain('h-9');
+    expect(screen.getByLabelText('Shuffle').className).toContain('w-9');
+    expect(screen.getByLabelText('Shuffle').className).toContain('h-9');
   });
 
   it('renders pill buttons when compact=false', () => {
     render(<PlayShuffleButtons onPlay={onPlay} onShuffle={onShuffle} compact={false} />);
     expect(screen.getByLabelText('Play all').className).toContain('px-2');
+    expect(screen.getByLabelText('Shuffle').className).toContain('px-2');
+  });
+
+  it('defaults to pill (compact=false) when compact is not specified', () => {
+    render(<PlayShuffleButtons onPlay={onPlay} onShuffle={onShuffle} />);
+    expect(screen.getByLabelText('Play all').className).toContain('px-2');
+    expect(screen.getByLabelText('Play all').className).not.toContain('w-9');
   });
 });
